@@ -2,10 +2,13 @@
 
 ## Description
 
-`on` is a simple library for handling DOM node events. Its primary feature is it returns a handle,
-from which you can pause, resume, and remove the event. Handles are much easier to manipulate than
-using `removeEventListener` or jQuery's `off`, which sometimes necessitates recreating sometimes
-complex or recursive function signatures.
+`on` is a simple library for handling DOM node events. It has been under development and used in
+production for years. While the repository is fairly new, the code is very well established and
+tested.
+
+The primary feature is it returns a handle, from which you can pause, resume, and remove the event.
+Handles are much easier to manipulate than using `removeEventListener` or jQuery's `off`, which
+sometimes necessitates recreating sometimes complex or recursive function signatures.
 
 Think of handles as something like a returned Promise - an object with methods, with which you can
 control the event handler.
