@@ -516,7 +516,7 @@
         }
 
         while(parent){
-            if(parent === document.body){ return false; }
+            if(parent === document.body || parent === document){ return false; }
             if(test(parent)){ break; }
             parent = parent.parentNode;
         }
