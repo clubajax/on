@@ -1,0 +1,14 @@
+{
+    "name": "on",
+    "version": "0.0.2",
+    "authors": [
+        "Mike Wilcox <mwilcox@paycor.com>"
+    ],
+    "description": "A simple library for handling DOM Node events",
+    "license": "Unlicense",
+    "ignore": [
+        "node_modules",
+        "bower_components"
+    ],
+    "main": "src/on.js"
+}
