@@ -1,9 +1,9 @@
 {
 	"author": "Mike Wilcox @clubajax",
 	"name": "on",
-	"main":"on.js",
+	"main":"src/on.js",
 	"description": "A simple library for handling DOM node events.",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"license": "Unlicense",
     "readmeFilename": "README.md",
 	"repository": {

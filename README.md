@@ -1,10 +1,29 @@
 # on
 
+A library for making it easy to manage DOM Node events.
+
+## Getting Started
+
+To install using bower:
+
+	bower install clubajax/on --save
+
+You may also use `npm` if you prefer. You can also clone the repository with your generic clone commands as a standalone 
+repository or submodule.
+	  
+	git clone git://github.com/clubajax/on.git
+                                      
+It is recommended that you set the config.path of RequireJS to make `on` accessible as an absolute
+path. If using as a global or with Browserify, it is suggested that you use an *NPM run script* to
+copy the `on` script to a location more convenient for your project.
+
+`on` has no dependencies.
+
 ## Description
 
 `on` is a simple library for handling DOM node events. It has been under development and used in
-production for years. While the repository is fairly new, the code is very well established and
-tested.
+production for years. While the repository is fairly new, the code is very well established,
+tested, and used in production apps.
 
 The primary feature is it returns a handle, from which you can pause, resume, and remove the event.
 Handles are much easier to manipulate than using `removeEventListener` or jQuery's `off`, which
@@ -26,28 +45,14 @@ Events can be handled with any object from which you can attach events.
 	on(image, 'load', onImageLoaded);
 	on(input, 'keydown', onKey);
 
-## Support
+## Browser Support
 
-`on` supports all modern browsers IE8 and above, and Node.js.
+`on` supports all modern browsers IE9 and above. IE8 is not supported, it does not handle `attacheEvent`.
 
 This library uses UMD, meaning it can be consumed with RequireJS, Browserify (CommonJS),
 or a standard browser global.
 
 Node.js is not supported since this is a DOM-based library.
-
-
-## Installation
-
-You can clone the repository with your generic clone commands as a standalone repository or
-submodule.
-
-	git clone git://github.com/clubajax/on.git
-
-It is recommended that you set the config.path of RequireJS to make `on` accessible as an absolute
-path. If using as a global or with Browserify, it is suggested that you use an *NPM run script* to
-copy the `on` script to a location more convenient for your project.
-
-`on` has no dependencies.
 
 ## Features
 
