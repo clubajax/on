@@ -8,9 +8,6 @@
     //
     // `on` is touch-friendly and will normalize touch events.
     //
-    // `on` supports `mouseleave` and `mouseeneter` events. These events are natively
-    // supported in Firefox and IE - and emulated for Chrome.
-    //
     // `on` also supports a custom `clickoff` event, to detect if you've clicked
     // anywhere in the document other than the passed node
     //
@@ -68,15 +65,7 @@
     // USAGE
     //      on(node, 'click div.tab span', callback);
     //
-	
-	
-    function hasMouseleave(){
-		function temp(){}
-		var n = document.createElement('div');
-		n.setAttribute('onmouseleave', temp);
-		return typeof n.onmouseleave === 'function';
-    }
-	
+
 	function hasWheel(){
 		var
 			isIE = navigator.userAgent.indexOf('Trident') > -1,
@@ -87,8 +76,6 @@
 	
 	function has(what){
 		switch(what){
-			case 'mouseleave': return hasMouseleave();
-			case 'mouseenter': return hasMouseleave();
 			case 'wheel': return hasWheel();
 		}
 		return false;
@@ -110,7 +97,20 @@
             return keys;
         }()),
         registry = {};
-		
+
+	function normalizeKeyEvent (callback){
+		// Add alphanumeric property (the letter typed) to the KeyEvent
+		//
+		return function(e){
+			// 48-57 0-9
+			// 65 - 90 a-z
+			if(keyCodes[e.keyCode]){
+				e.alphanumeric = keyCodes[e.keyCode];
+			}
+			callback(e);
+		};
+	}
+
 	function register(id, handle){
 		if(!registry[id]){
 			registry[id] = [];
@@ -140,32 +140,12 @@
 			}
 		};
 	}
-	
-	function bind (ctx, callback){
-		// binds a function to a context which can be passed
-		// around and used later
-		//      ctx:
-		//          `this` or an object
-		//      callback:
-		//          a function, method or string reference
-		//          to a method.
-		//
-		if(typeof(callback) === "string"){
-			if(!callback){ callback = ctx; ctx = window; }
-			return function(){
-				ctx[callback].apply(ctx, arguments); };
-		}else{
-			var
-				method = !!callback ? ctx.callback || callback : ctx,
-				scope = !!callback ? ctx : window;
-
-			return function(){  method.apply(scope, arguments); };
-		}
-	}
 
 	function onClickoff (node, callback){
 		var
 			isOver = false,
+			mHandle,
+			handle,
 			lHandle = on(node, 'mouseleave', function(){
 				isOver = false;
 			}),
@@ -178,58 +158,33 @@
 				}
 			});
 
-		return makeMultiHandle([lHandle, eHandle, bHandle]);
-	}
+		mHandle = makeMultiHandle([lHandle, eHandle, bHandle]);
 
-	function onMouseEnter (node, eventType, callback){
-		// psuedo mouseenter for older Chrome
-		var
-			isOver = false,
-			handle = on(document.body, 'mousemove', function(event){
-				var
-					rect = node.getBoundingClientRect(),
-					isOverNode =
-						event.clientX > rect.left &&
-						event.clientX < rect.right &&
-						event.clientY > rect.top &&
-						event.clientY < rect.bottom;
+		handle = {
+			resume: function () {
+				setTimeout(function () {
+					mHandle.resume();
+				}, 100);
+			},
+			pause: function () {
+				isOver = false;
+				mHandle.pause();
+			},
+			remove: function () {
+				isOver = false;
+				mHandle.remove();
+			}
+		};
 
-				if(!isOver && isOverNode){
-					isOver = true;
-					callback(event);
-				}else if(!isOverNode){
-					isOver = false;
-				}
-			});
-
-		return handle;
-	}
-
-	function onMouseLeave (node, eventType, callback){
-		// psuedo mouseleave for older Chrome
-		var
-			isOver = false,
-			handle = on(document.body, 'mousemove', function(event){
-				var
-					rect = node.getBoundingClientRect(),
-					isOverNode =
-						event.clientX > rect.left &&
-						event.clientX < rect.right &&
-						event.clientY > rect.top &&
-						event.clientY < rect.bottom;
-
-				if(isOver && !isOverNode){
-					isOver = false;
-					callback(event);
-				}else if(isOverNode){
-					isOver = true;
-				}
-			});
+		handle.pause();
 
 		return handle;
 	}
 
 	function getNode(str){
+        if(typeof str !== 'string'){
+            return str;
+        }
 		var node;
 		if(/\#|\.|\s/.test(str)){
 			node = document.body.querySelector(str);
@@ -267,19 +222,6 @@
 		};
 	}
 
-	function normalizeKeyEvent (callback){
-		// Add alphanumeric property (the letter typed) to the KeyEvent
-		//
-		return function(e){
-			// 48-57 0-9
-			// 65 - 90 a-z
-			if(keyCodes[e.keyCode]){
-				e.alphanumeric = keyCodes[e.keyCode];
-			}
-			callback(e);
-		};
-	}
-
 	function on (node, eventType, callback, optionalContext, id){
 		//  USAGE
 		//      var handle = on(this.node, 'mousedown', this, 'onStart');
@@ -310,7 +252,7 @@
 			optionalContext = null;
 		}
 
-		node = typeof node === 'string' ? getNode(node) : node;
+		node = getNode(node);
 		callback = !!optionalContext ? bind(optionalContext, callback) : callback;
 
 		if(/\s/.test(eventType)){
@@ -342,16 +284,6 @@
 		if(eventType === 'clickoff'){
 			// custom - used for popups 'n stuff
 			return onClickoff(node, callback);
-		}
-
-		if(eventType === 'mouseenter' && !has('mouseenter')){
-			// Chrome does not support these events. Route through custom handler
-			return onMouseEnter(node, eventType, callback);
-		}
-
-		if(eventType === 'mouseleave' && !has('mouseleave')){
-			// Chrome does not support these events. Route through custom handler
-			return onMouseLeave(node, eventType, callback);
 		}
 
 		if(eventType === 'wheel'){
@@ -390,7 +322,7 @@
 		};
 
 		if(id){
-			// If an ID has been passed, regsiter it so it can be used to
+			// If an ID has been passed, register it so it can be used to
 			// remove multiple events by id
 			register(id, handle);
 		}
@@ -418,8 +350,6 @@
         return makeMultiHandle(handles);
     };
 
-    on.bind = bind;
-
     on.remove = function(handles){
         // convenience function;
         // removes one or more handles;
@@ -435,13 +365,11 @@
                 });
                 idHandles = registry[handles] = null;
                 delete registry[handles];
-            }//else{ console.warn('Tried to remove on.handle, but id not found:', handles); }
+            }
 
             return [];
         }
-        if(Object.prototype.toString.call(handles) !== '[object Array]'){
-            handles = [handles];
-        }
+        handles = Array.isArray(handles) ? handles : [handles];
 
         for( i = 0; i < handles.length; i++ ){
             h = handles[i];
@@ -455,22 +383,11 @@
                     // knockout
                     h.dispose();
                 }
-                // EventEmitter is not supported, but Evented extends EventEmitter
-                // and is supported
-                //else if(h.off){
-                //    // EventEmitter
-                //    h.off();
-                //}
                 else if(typeof h === 'function'){
                     // custom clean up
                     h();
                 }
-                else if(typeof h !== 'object'){
-                    pubsub.unsubscribe(h);
-                }else{
-                    console.log('handle type not recognized', h);
-                }
-            } //else{ console.log('null handle'); }
+            }
         }
         return [];
     };
