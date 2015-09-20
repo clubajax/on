@@ -1,5 +1,5 @@
 /* UMD.define */ (function (root, factory) {
-    if (typeof customLoader === 'function'){ customLoader(factory); }else if (typeof define === 'function' && define.amd){ define([], factory); }else if(typeof exports === 'object'){ module.exports = factory(); }else{ root.returnExports = factory(); window.on = factory(); }
+    if (typeof customLoader === 'function'){ customLoader(factory, 'on'); }else if (typeof define === 'function' && define.amd){ define([], factory); }else if(typeof exports === 'object'){ module.exports = factory(); }else{ root.returnExports = factory(); window.on = factory(); }
 }(this, function () {
 	// `on` is a simple library for attaching events to nodes. Its primary feature
     // is it returns a handle, from which you can pause, resume and remove the
