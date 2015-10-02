@@ -454,6 +454,13 @@
         }
         return false;
     };
+    
+    on.once = function (node, eventType, callback, optionalContext){
+		var h = on(node, eventType, function () {
+			callback.apply(optionalContext, arguments);
+			h.remove();
+		});
+	};
 
     on.makeMultiHandle = makeMultiHandle;
 
