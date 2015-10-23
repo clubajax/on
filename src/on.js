@@ -45,11 +45,6 @@
 	//          "touchmove":this.method
 	//      }, this);
 	//
-	// `on.bind` is a convenience method for binding context to a method.
-	//
-	// USAGE
-	//      callback = on.bind(this, 'myCallback');
-	//
 	// `on` supports an optional ID that can be used to track connections to be
 	// disposed later.
 	//
@@ -256,7 +251,7 @@
 		}
 
 		node = getNode(node);
-		callback = !!optionalContext ? bind(optionalContext, callback) : callback;
+		callback = !!optionalContext ? callback.bind(optionalContext) : callback;
 
 		if(/\s/.test(eventType)){
 			// handle child selectors, like:
