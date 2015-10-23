@@ -93,14 +93,12 @@
 		XLR8 = 0,
 		mouseWheelHandle,
 		//numCalls = 0,
-		keyCodes = (function(){
-			var keys = []; // it will be a sparse array to keep alphanumeric ASCII characters
-			populateRange(keys, '0', '9');
-			populateRange(keys, 'a', 'z');
-			populateRange(keys, 'A', 'Z');
-			return keys;
-		}()),
+		keyCodes = [], // it will be a sparse array to keep alphanumeric ASCII characters
 		registry = {};
+
+	populateRange(keyCodes, '0', '9');
+	populateRange(keyCodes, 'a', 'z');
+	populateRange(keyCodes, 'A', 'Z');
 
 	function normalizeKeyEvent (callback){
 		// Add alphanumeric property (the letter typed) to the KeyEvent
