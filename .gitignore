@@ -20,5 +20,6 @@ testem.log
 .idea
 /.idea
 .idea/UI-X.iml
+*.sublime-*
 *.lnk
 ebuild.bat
