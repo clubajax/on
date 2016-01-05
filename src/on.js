@@ -140,44 +140,36 @@
 	}
 
 	function onClickoff (node, callback){
-		var
-			isOver = false,
-			mHandle,
-			handle,
-			lHandle = on(node, 'mouseleave', function(){
-				isOver = false;
-			}),
-			eHandle = on(node, 'mouseenter', function(){
-				isOver = true;
-			}),
-			bHandle = on(document.body, 'click', function(event){
-				if(!isOver){
-					callback(event);
-				}
-			});
-
-		mHandle = makeMultiHandle([lHandle, eHandle, bHandle]);
-
-		handle = {
-			resume: function () {
-				setTimeout(function () {
-					mHandle.resume();
-				}, 100);
-			},
-			pause: function () {
-				isOver = false;
-				mHandle.pause();
-			},
-			remove: function () {
-				isOver = false;
-				mHandle.remove();
-			}
-		};
-
-		handle.pause();
-
-		return handle;
-	}
+	        var
+	            mHandle,
+	            handle,
+	            bHandle = on(document.body, 'click', function(event){
+	                if(!node.contains(event.target)) {
+	                    callback(event);
+	                }
+	
+	            });
+	
+	        mHandle = makeMultiHandle([lHandle, eHandle, bHandle]);
+	
+	        handle = {
+	            resume: function () {
+	                setTimeout(function () {
+	                    mHandle.resume();
+	                }, 100);
+	            },
+	            pause: function () {
+	                mHandle.pause();
+	            },
+	            remove: function () {
+	                mHandle.remove();
+	            }
+	        };
+	
+	        handle.pause();
+	
+	        return handle;
+	    }
 
 	function getNode(str){
 		if(typeof str !== 'string'){
