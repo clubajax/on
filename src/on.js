@@ -141,7 +141,6 @@
 
 	function onClickoff (node, callback){
 	        var
-	            mHandle,
 	            handle,
 	            bHandle = on(document.body, 'click', function(event){
 	                if(!node.contains(event.target)) {
@@ -149,20 +148,18 @@
 	                }
 	
 	            });
-	
-	        mHandle = makeMultiHandle([lHandle, eHandle, bHandle]);
-	
+
 	        handle = {
 	            resume: function () {
 	                setTimeout(function () {
-	                    mHandle.resume();
+	                    bHandle.resume();
 	                }, 100);
 	            },
 	            pause: function () {
-	                mHandle.pause();
+	                bHandle.pause();
 	            },
 	            remove: function () {
-	                mHandle.remove();
+	                bHandle.remove();
 	            }
 	        };
 	
