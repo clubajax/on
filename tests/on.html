@@ -140,27 +140,27 @@
 		
 		
 		
-			o = {
-				init: function(){
-					on('cb1', 'click', 'onClick', this);
-					on.multi('cm1', {
-						'click': 'onClick',
-						'mousedown': 'onDown',
-						'mouseup': 'onUp'
-					}, this);
-				},
-				onClick: function(evt){
-					console.log('context click',  evt);
-				},
-				onDown: function(evt){
-					console.log('context down',  evt);
-				},
-				onUp: function(evt){
-					console.log('context up',  evt);
-				}
-			};
-		
-			o.init();
+//			o = {
+//				init: function(){
+//					on('cb1', 'click', 'onClick', this);
+//					on.multi('cm1', {
+//						'click': 'onClick',
+//						'mousedown': 'onDown',
+//						'mouseup': 'onUp'
+//					}, this);
+//				},
+//				onClick: function(evt){
+//					console.log('context click',  evt);
+//				},
+//				onDown: function(evt){
+//					console.log('context down',  evt);
+//				},
+//				onUp: function(evt){
+//					console.log('context up',  evt);
+//				}
+//			};
+//
+//			o.init();
 		
 		
 
