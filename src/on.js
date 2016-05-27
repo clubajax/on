@@ -291,6 +291,7 @@
 	};
 
 	on.makeMultiHandle = makeMultiHandle;
+	on.closest = closest;
 
 	return on;
 
