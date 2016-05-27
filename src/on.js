@@ -224,7 +224,7 @@
 				}
 			};
 		}else{
-			callback = filter;
+			callback = filter || handler;
 		}
 
 		if(eventType === 'clickoff'){
