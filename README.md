@@ -22,8 +22,7 @@ copy the `on` script to a location more convenient for your project.
 ## Description
 
 `on` is a simple library for handling DOM node events. It has been under development and used in
-production for years. While the repository is fairly new, the code is very well established,
-tested, and used in production apps.
+production for years. The code is very well established, tested, and used in enterprise production apps.
 
 The primary feature is it returns a handle, from which you can pause, resume, and remove the event.
 Handles are much easier to manipulate than using `removeEventListener` or jQuery's `off`, which
@@ -45,9 +44,12 @@ Events can be handled with any object from which you can attach events.
 	on(image, 'load', onImageLoaded);
 	on(input, 'keydown', onKey);
 
+`on.remove` is a very common feature, use for cleaning up events when destroying a widget.
+`on.pause` is less common - used for turning functionality on and off, like for popups.
+
 ## Browser Support
 
-`on` supports all modern browsers IE9 and above. IE8 is not supported, it does not handle `attacheEvent`.
+`on` supports all modern browsers IE9 and above. IE8 is not supported, `attachEvent` is not used.
 
 This library uses UMD, meaning it can be consumed with RequireJS, Browserify (CommonJS),
 or a standard browser global.
@@ -62,8 +64,11 @@ Wheel Events are normalized to a standard:
 	
 It also adds acceleration and deceleration to make Mac and Windows scroll wheels behave similarly.
 
-KeyEvents are standard, except for the addition of the `alphanumeric` property, which adds
-the actual letter or number pressed to the event, not just the key code.
+KeyEvents are standard, using the [`key` property](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key), 
+which adds the actual letter or number pressed to the event, not just the key code.
+
+The key property is cross browser, thanks to a polyfill by [chris van wiemeersch](https://github.com/cvan/keyboardevent-key-polyfill)
+which is included for convenience.
 
 There is also a custom `clickoff` event, to detect if you've clicked anywhere in the document
 other than the passed node. Useful for menus and modals.
@@ -76,39 +81,43 @@ other than the passed node. Useful for menus and modals.
 
 	 var handle = on(node, 'mouseover,click', onStart);
 
-`on` has an optional context parameter. The fourth argument can be 'this'
-(or some other object) to conveniently avoid the use of var `self = this;`
+`on` supports filtered selectors, as an additional parameter:
 
-	 handle1 = on(this.node, 'mousedown', 'onStart', this);
-	 handle2 = on(this.node, 'mousedown', this.onStart, this);
+	 on(node, 'click', '.tab', callback);
+	 on(node, 'click', 'div', callback);
+	 on(node, 'click', '#main', callback);
+	 on(node, 'click', 'div["data-foo"=bar]', callback);
 
-`on.multi` allows for connecting multiple events to a node at the same
-time.
+So as not to override the event, the targeted element will be in the event as `filteredTarget` as well as
+the second argument in the callback.
 
-	 handle = on.multi(document, {
-		 "touchend":"onEnd",
-		 "touchcancel":"onEnd",
-		 "touchmove":this.method
-	 }, this);
+## Additional Features
 
-`on` supports an optional ID that can be used to track connections to be
-disposed later.
+`on.emit`: a convenience function to generate events on nodes:
 
-	 on(node, 'click', callback, 'uid-a');
-	 on(node, 'mouseover', callback, 'uid-a');
-	 on(otherNode, 'click', callback, 'uid-a');
-	 on(document, 'load', callback, 'uid-a');
-	 on.remove('uid-a');
+    on.emit(node, 'click', {value: 'hello'});
+    
+on does not need to have a node passed to it - you can pass an element ID or CSS selector:
 
-`on` supports simple selectors, separated from the event by a space:
+    on('mynode', 'click', callback);
+    on('#mynode', 'click', callback);
+    on('.myUniqueClass', 'click', callback);
 
-	 on(node, 'click .tab', callback);
-	 on(node, 'click div', callback);
-	 on(node, 'click #main', callback);
-	 on(node, 'click div["data-foo"=bar]', callback);
+`on.makeMultiHandle`: accepts an array and returns a single handle to operate on all at once:
 
-Note: to keep the code small and simple, this feature is limited. Use only a single nodeName, ID,
-attribute selector, or single className. Combinations may not work.
+    var handle = on.makeMultiHandle([
+        on(node, 'mousedown', callback1),
+        on(node, 'mouseup', callback2)
+    ]);
+    handle.pause();
+
+`on.once`: Will remove itself after one event has fired:
+
+    on.once(node, 'click', function(){
+        console.log('fires only once');
+    });
+    on.emit(node, 'click');
+    on.emit(node, 'click');
 
 ## License
 
