@@ -3,7 +3,7 @@
 	"name": "on",
 	"main":"src/on.js",
 	"description": "A simple library for handling DOM Node events.",
-	"version": "0.0.2",
+	"version": "2.0.0",
 	"license": "Unlicense",
     "readmeFilename": "README.md",
 	"repository": {
