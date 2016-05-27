@@ -74,10 +74,14 @@ There is also a custom `clickoff` event, to detect if you've clicked anywhere in
 other than the passed node. Useful for menus and modals.
 
 	 var handle = on(node, 'clickoff', callback);
+	 handle.resume();
 	 //  callback fires if something other than node is clicked
 
- There is support for multiple event types at once. The following example is useful for handling
- both desktop mouseovers and tablet clicks:
+**NOTE** _a clickoff event starts paused due to potential side effects. You typically don't want the event
+to be listened to and fired until some other event has been triggered, like the opening of a modal._
+
+There is support for multiple event types at once. The following example is useful for handling
+both desktop mouseovers and tablet clicks:
 
 	 var handle = on(node, 'mouseover,click', onStart);
 
