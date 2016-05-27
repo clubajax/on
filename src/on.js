@@ -266,10 +266,18 @@
 	}
 
 	on.once = function (node, eventType, filter, callback){
-		var h = on(node, eventType, filter, function () {
-			callback.apply(window, arguments);
-			h.remove();
-		});
+		var h;
+		if(filter && callback){
+			h = on(node, eventType, filter, function () {
+				callback.apply(window, arguments);
+				h.remove();
+			});
+		}else{
+			h = on(node, eventType, function () {
+				filter.apply(window, arguments);
+				h.remove();
+			});
+		}
 		return h;
 	};
 
