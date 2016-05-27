@@ -270,6 +270,7 @@
 			callback.apply(window, arguments);
 			h.remove();
 		});
+		return h;
 	};
 
 	function mix(object, value){
