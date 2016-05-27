@@ -292,6 +292,7 @@
 
 	on.makeMultiHandle = makeMultiHandle;
 	on.closest = closest;
+	on.matches = matches;
 
 	return on;
 
