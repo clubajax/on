@@ -22,14 +22,31 @@
 		#modal{
 			right: 240px;
 		}
+		p{
+			font-style: italic;
+		}
+		#css{
+			background: #fffed7;
+			border: 1px solid #f5ff95;
+			padding: 10px;
+		}
+		#css span{
+			display: inline-block;
+			background: #c7c9ff;
+			padding: 10px;
+		}
+		#css a{
+			background: #ffe3df;
+			padding: 3px;
+		}
 	</style>
-
+	<script src="../src/key-poly.js"></script>
     <script src="../src/on.js"></script>
 
 </head>
 <body>
 	<h1>on test</h1>
-	<p style='font-style: italic;'>Results are in the console.</p>
+	<p>Results are in the console.</p>
 	
 	<p>Test Key Events</p>
 	<input id='inp' />
@@ -39,12 +56,6 @@
     <button id=b2>pause clicker</button>
     <button id=b3>resume clicker</button>
     <button id=b4>cancel clicker</button>
-
-    <p>Test multi connections</p>
-    <button id=m1>multi</button>
-    <button id=m2>pause multi</button>
-    <button id=m3>resume multi</button>
-    <button id=m4>cancel multi</button>
 
     <p>Test context</p>
     <button id=cb1>clicker</button>
@@ -67,17 +78,25 @@
 			console.log('on loaded');
 			var
 				on = window.on,
-				h1, h2, o,
+				h1, h2, o, clickoff,
+				tabs = document.querySelectorAll('.tab'),
 				wheelNode = document.getElementById('mousewheeltest'),
 				modal = document.getElementById('modal');
-			
+
+			// test mouse wheel normalization
 			on(wheelNode, 'wheel', function(e){
 				wheelNode.innerHTML = 'delta: ' + e.delta.toFixed(2)+ '<br>wheelY: ' + e.wheelY.toFixed(2)+ '<br>wheelX: ' + e.wheelX.toFixed(2);
 			});
-			
-			on(modal, 'clickoff', function(){
+
+			// test modal clickoff special function
+			clickoff = on(modal, 'clickoff', function(){
 				modal.innerHTML = ('modal clickoff');	
 			});
+			clickoff.resume();
+
+
+			// test mouseemter/leave
+			// should be standard in all browsers
 			on('modal', 'mouseenter', function(){
 				modal.innerHTML = ('modal enter');	
 			});
@@ -85,25 +104,15 @@
 				modal.innerHTML = ('modal leave');	
 			});
 			
-			on('inp', 'keydown', function(e){
-				console.log('keydown', e.alphanumeric, e.keyCode, e);
+			// test CSS filters
+			on('css', 'click', '.tab', function(e, filteredTarget){
+				console.log('clicked tab', e.filteredTarget);
 			});
-			on('inp', 'keyup', function(e){
-				console.log('keyup', e.alphanumeric, e.keyCode, e);
-			});
-			on('inp', 'keypress', function(e){
-				console.log('keypress', e.alphanumeric, e.keyCode, e);
-			});
-		
-			on('css', 'click .tab', function(e){
-				console.log('clicked tab');
-			});
-		
-		
-		
-		
+
+
+			// test pause/remove handles
 			h1 = on('b1', 'click', function(){
-				console.log('clicker');
+				console.log('[clicker]');
 			});
 			on('b2', 'click', function(){
 				h1.pause();
@@ -117,52 +126,57 @@
 				h1.remove();
 				console.log('remove!');
 			});
-		
-			h2 = on.multi('m1', {
-				'click': function(){ console.log('multi click'); },
-				'mousedown': function(){ console.log('multi down'); },
-				'mouseup': function(){ console.log('multi up'); }
+
+
+			// test key handling
+			// expects the use of polyfill
+			on('inp', 'keydown', function(e){
+				console.log('keydown', e.key, e.keyCode);
 			});
-		
-			on('m2', 'click', function(){
-				h2.pause();
-				console.log('pause multi!');
+			on('inp', 'keyup', function(e){
+				//console.log('keyup', e.alphanumeric, e.key);
 			});
-			on('m3', 'click', function(){
-				h2.resume();
-				console.log('resume multi!');
+			on('inp', 'keypress', function(e){
+				//console.log('keypress', e.alphanumeric, e.key);
 			});
-			on('m4', 'click', function(){
-				h2.remove();
-				console.log('remove mutli!');
-			});
-		
-		
-		
-		
-//			o = {
-//				init: function(){
-//					on('cb1', 'click', 'onClick', this);
-//					on.multi('cm1', {
-//						'click': 'onClick',
-//						'mousedown': 'onDown',
-//						'mouseup': 'onUp'
-//					}, this);
-//				},
-//				onClick: function(evt){
-//					console.log('context click',  evt);
-//				},
-//				onDown: function(evt){
-//					console.log('context down',  evt);
-//				},
-//				onUp: function(evt){
-//					console.log('context up',  evt);
-//				}
-//			};
-//
-//			o.init();
-		
-		
+
+
+			function delay(fn){
+				setTimeout(fn, 300);
+			}
+
+			function testKeys(){
+				delay(function () {
+					on.emit('inp', 'keydown', {keyCode: 65, key: 'A'});
+				});
+			}
+			function test(){
+				delay(function () {
+					on.emit('modal', 'mouseenter');
+					delay(function () {
+						on.emit('modal', 'mouseleave');
+					});
+				});
+				console.log('should see [clicker] twice:');
+				on.emit('b1', 'click');
+				on.emit('b2', 'click');
+				on.emit('b1', 'click');
+				on.emit('b1', 'click');
+				on.emit('b3', 'click');
+				on.emit('b1', 'click');
+				on.emit('b4', 'click');
+				on.emit('b1', 'click');
+				on.emit('b1', 'click');
+
+				on.emit(tabs[0], 'click');
+				on.emit(tabs[1], 'click');
+				on.emit(tabs[2], 'click');
+
+
+
+			}
+			test();
+			testKeys();
 
 </script>
 </html>

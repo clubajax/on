@@ -27,41 +27,22 @@
 	// USAGE
 	//      var handle = on(node, 'mouseover,click', onStart);
 	//
-	//
-	// `on` has an optional context parameter. The fourth argument can be 'this'
-	// (or some other object) to conveniently avoid the use of var `self = this;`
-	//
-	//  USAGE
-	//      var handle = on(this.node, 'mousedown', 'onStart', this);
-	//
-	// `on.multi` allows for connecting multiple events to a node at the same
-	// time. Note this requires a context (I think), so it is not applicable for
-	// anonymous functions.
-	//
-	//  USAGE
-	//      handle = on.multi(document, {
-	//          "touchend":"onEnd",
-	//          "touchcancel":"onEnd",
-	//          "touchmove":this.method
-	//      }, this);
-	//
-	// `on` supports an optional ID that can be used to track connections to be
-	// disposed later.
+	// `on` supports selector filters. The targeted element will be in the event
+	// as filteredTarget
 	//
 	// USAGE
-	//      on(node, 'click', callback, 'uid-a');
-	//      on(node, 'mouseover', callback, 'uid-a');
-	//      on(otherNode, 'click', callback, 'uid-a');
-	//      on(document, 'load', callback, 'uid-a');
-	//      on.remove('uid-a');
-	//
-	// `on` supports selectors, seperated from the event by a space:
-	//
-	// USAGE
-	//      on(node, 'click div.tab span', callback);
+	//      on(node, 'click', 'div.tab span', callback);
 	//
 
-	function hasWheel(){
+	'use strict';
+
+	try{
+		window.keyboardeventKeyPolyfill.polyfill();
+	}catch(e){
+		console.error('on/src/key-poly is required for the event.key property');
+	}
+
+	function hasWheelTest(){
 		var
 			isIE = navigator.userAgent.indexOf('Trident') > -1,
 			div = document.createElement('div');
@@ -69,51 +50,43 @@
 			(isIE && document.implementation.hasFeature("Events.wheel", "3.0")); // IE feature detection
 	}
 
-	function has(what){
-		switch(what){
-			case 'wheel': return hasWheel();
-		}
-		return false;
-	}
-
-	function populateRange(keys, fromChar, toChar){
-		for(var i = fromChar.charCodeAt(0), n = toChar.charCodeAt(0); i <= n; ++i){
-			keys[i] = String.fromCharCode(i);
-		}
-	}
-
 	var
+		matches,
+		hasWheel = hasWheelTest(),
 		isWin = navigator.userAgent.indexOf('Windows')>-1,
 		FACTOR = isWin ? 10 : 0.1,
 		XLR8 = 0,
-		mouseWheelHandle,
-		//numCalls = 0,
-		keyCodes = [], // it will be a sparse array to keep alphanumeric ASCII characters
-		registry = {};
+		mouseWheelHandle;
 
-	populateRange(keyCodes, '0', '9');
-	populateRange(keyCodes, 'a', 'z');
-	populateRange(keyCodes, 'A', 'Z');
 
-	function normalizeKeyEvent (callback){
-		// Add alphanumeric property (the letter typed) to the KeyEvent
-		//
-		return function(e){
-			// 48-57 0-9
-			// 65 - 90 a-z
-			var value = keyCodes[e.keyCode];
-			if(typeof value == 'string'){
-				e.alphanumeric = value;
+	['matches', 'matchesSelector', 'webkit', 'moz', 'ms', 'o'].some(function (name) {
+		if (name.length < 7) { // prefix
+			name += 'MatchesSelector';
+		}
+		if (Element.prototype[name]) {
+			matches = name;
+			return true;
+		}
+		return false;
+	});
+
+	function closest (element, selector, parent) {
+		while (element) {
+			if (element[matches] && element[matches](selector)) {
+				return element;
 			}
-			callback(e);
-		};
+			if (element === parent) {
+				break;
+			}
+			element = element.parentElement;
+		}
+		return null;
 	}
 
-	function register(id, handle){
-		if(!registry[id]){
-			registry[id] = [];
-		}
-		registry[id].push(handle);
+	function closestFilter (element, selector) {
+		return function (e) {
+			return closest(e.target, selector, element);
+		};
 	}
 
 	function makeMultiHandle (handles){
@@ -140,33 +113,36 @@
 	}
 
 	function onClickoff (node, callback){
-	        var
-	            handle,
-	            bHandle = on(document.body, 'click', function(event){
-	                if(!node.contains(event.target)) {
-	                    callback(event);
-	                }
-	
-	            });
+		// important note!
+		// starts paused
+		//
+        var
+            handle,
+            bHandle = on(document.body, 'click', function(event){
+                if(!node.contains(event.target)) {
+                    callback(event);
+                }
 
-	        handle = {
-	            resume: function () {
-	                setTimeout(function () {
-	                    bHandle.resume();
-	                }, 100);
-	            },
-	            pause: function () {
-	                bHandle.pause();
-	            },
-	            remove: function () {
-	                bHandle.remove();
-	            }
-	        };
-	
-	        handle.pause();
-	
-	        return handle;
-	    }
+            });
+
+        handle = {
+            resume: function () {
+                setTimeout(function () {
+                    bHandle.resume();
+                }, 100);
+            },
+            pause: function () {
+                bHandle.pause();
+            },
+            remove: function () {
+                bHandle.remove();
+            }
+        };
+
+        handle.pause();
+
+        return handle;
+    }
 
 	function getNode(str){
 		if(typeof str !== 'string'){
@@ -209,7 +185,7 @@
 		};
 	}
 
-	function on (node, eventType, callback, optionalContext, id){
+	function on (node, eventType, filter, handler){
 		//  USAGE
 		//      var handle = on(this.node, 'mousedown', this, 'onStart');
 		//      handle.pause();
@@ -217,10 +193,9 @@
 		//      handle.remove();
 		//
 		var
+			callback,
 			handles,
-			handle,
-			targetCallback,
-			childTarget = false;
+			handle;
 
 		if(/,/.test(eventType)){
 			// handle multiple event types, like:
@@ -228,44 +203,28 @@
 			//
 			handles = [];
 			eventType.split(',').forEach(function(eStr){
-				handles.push(on(node, eStr.trim(), callback, optionalContext, id));
+				handles.push(on(node, eStr.trim(), filter, handler));
 			});
 			return makeMultiHandle(handles);
 		}
 
-		if(typeof optionalContext === 'string'){
-			// no context. Last argument is handle id
-			id = optionalContext;
-			optionalContext = null;
-		}
-
 		node = getNode(node);
-		callback = !!optionalContext ? callback.bind(optionalContext) : callback;
 
-		if(/\s/.test(eventType)){
-			// handle child selectors, like:
-			// on(node, 'click .tab span', callback);
-			//
-			childTarget = eventType.substring(eventType.indexOf(' ') + 1, eventType.length);
-			eventType = eventType.substring(0, eventType.indexOf(' '));
-			targetCallback = callback;
-			callback = function(e){
-				var i, nodes, parent = on.ancestor(e.target, childTarget);
-				if(parent){
-					e.selectorTarget = parent;
-					targetCallback(e);
-				}else{
-					nodes = node.querySelectorAll(childTarget);
-					for(i = 0; i < nodes.length; i ++){
-						if(nodes[i] === e.target || on.isAncestor(nodes[i], e.target)){
-							e.selectorTarget = nodes[i];
-							targetCallback(e);
-							break;
-						}
-					}
+		if(filter && handler){
+			if (typeof filter == 'string') {
+				filter = closestFilter(node, filter);
+			}
+			// else it is a custom function
+			callback = function (e) {
+				var result = filter(e);
+				console.log('result', result);
+				if (result) {
+					e.filteredTarget = result;
+					handler(e, result);
 				}
 			};
-
+		}else{
+			callback = filter;
 		}
 
 		if(eventType === 'clickoff'){
@@ -275,22 +234,17 @@
 
 		if(eventType === 'wheel'){
 			// mousewheel events, natch
-			if(has('wheel')){
+			if(hasWheel){
 				// pass through, but first curry callback to wheel events
 				callback = normalizeWheelEvent(callback);
 			}else{
 				// old Firefox, old IE, Chrome
-				return on.multi(node, {
-					DOMMouseScroll:normalizeWheelEvent(callback),
-					mousewheel:normalizeWheelEvent(callback)
-				}, optionalContext);
+				return makeMultiHandle([
+					on(node, 'DOMMouseScroll', normalizeWheelEvent(callback)),
+					on(node, 'mousewheel', normalizeWheelEvent(callback))
+				]);
 			}
 		}
-
-		if(eventType.indexOf('key') > -1){
-			callback = normalizeKeyEvent(callback);
-		}
-
 
 		node.addEventListener(eventType, callback, false);
 
@@ -308,145 +262,32 @@
 			}
 		};
 
-		if(id){
-			// If an ID has been passed, register it so it can be used to
-			// remove multiple events by id
-			register(id, handle);
-		}
-
 		return handle;
 	}
 
-	on.multi = function(node, map, context, id){
-		//  USAGE
-		//      handle = on.multi(document, {
-		//          "touchend":"onEnd",
-		//          "touchcancel":"onEnd",
-		//          "touchmove":this.method
-		//      }, this);
-		//
-		var eventType,
-			handles = [];
-
-		for( eventType in map ){
-			if(map.hasOwnProperty(eventType)){
-				handles.push(on(node, eventType, map[eventType], context, id));
-			}
-		}
-
-		return makeMultiHandle(handles);
-	};
-
-	on.remove = function(handles){
-		// convenience function;
-		// removes one or more handles;
-		// accepts one handle or an array of handles;
-		// accepts different types of handles (dispose/remove/topic token)
-		//
-		var i, h, idHandles;
-		if(typeof handles === 'string'){
-			idHandles = registry[handles];
-			if(idHandles){
-				idHandles.forEach(function(h){
-					h.remove();
-				});
-				idHandles = registry[handles] = null;
-				delete registry[handles];
-			}
-
-			return [];
-		}
-		handles = Array.isArray(handles) ? handles : [handles];
-
-		for( i = 0; i < handles.length; i++ ){
-			h = handles[i];
-
-			if(h){ // check for nulls / already removed handles
-				if(h.remove){
-					// on handle, or AOP
-					h.remove();
-				}
-				else if(h.dispose){
-					// knockout
-					h.dispose();
-				}
-				else if(typeof h === 'function'){
-					// custom clean up
-					h();
-				}
-			}
-		}
-		return [];
-	};
-
-	on.ancestor = function(node, selector){
-		// gets the ancestor of node based on selector criteria
-		// useful for getting the target node when a child node is clicked upon
-		//
-		// USAGE
-		//      on.selector(childNode, '.app.active');
-		//      on.selector(childNode, '#thinger');
-		//      on.selector(childNode, 'div');
-		//	DOES NOT SUPPORT:
-		//		combinations of above
-		var
-			test,
-			parent = node;
-
-		if(selector.indexOf('.') === 0){
-			// className
-			selector = selector.replace('.', ' ').trim();
-			test = function(n){
-				return n.classList.contains(selector);
-			};
-		}
-		else if(selector.indexOf('#') === 0){
-			// node id
-			selector = selector.replace('#', '').trim();
-			test = function(n){
-				return n.id === selector;
-			};
-		}
-		else if(selector.indexOf('[') > -1){
-			// attribute
-			console.error('attribute selectors are not yet supported');
-		}
-		else{
-			// assuming node name
-			selector = selector.toUpperCase();
-			test = function(n){
-				return n.nodeName === selector;
-			};
-		}
-
-		while(parent){
-			if(parent === document.body || parent === document){ return false; }
-			if(test(parent)){ break; }
-			parent = parent.parentNode;
-		}
-
-		return parent;
-	};
-
-	on.isAncestor = function(parent, child){
-		// determines if parent is an ancestor of child
-		// returns boolean
-		//
-		if(parent === child){ return false; } // do we always want the same node to be false?
-		while(child){
-			if(child === parent){
-				return true;
-			}
-			child = child.parentNode;
-		}
-		return false;
-	};
-
-	on.once = function (node, eventType, callback, optionalContext){
-		var h = on(node, eventType, function () {
-			callback.apply(optionalContext, arguments);
+	on.once = function (node, eventType, filter, callback){
+		var h = on(node, eventType, filter, function () {
+			callback.apply(window, arguments);
 			h.remove();
 		});
+	};
+
+	function mix(object, value){
+		if(typeof value === 'object') {
+			Object.keys(value).forEach(function (key) {
+				object[key] = value[key];
+			});
+		}else{
+			object.value = value;
+		}
+		return object;
+	}
+
+	on.emit = function (node, eventName, value) {
+		node = getNode(node);
+		var event = document.createEvent('HTMLEvents');
+		event.initEvent(eventName, true, true); // event type, bubbling, cancelable
+		return node.dispatchEvent(mix(event, value));
 	};
 
 	on.makeMultiHandle = makeMultiHandle;
