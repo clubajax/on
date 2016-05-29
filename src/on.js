@@ -299,6 +299,12 @@
 		return node.dispatchEvent(mix(event, value));
 	};
 
+	on.fire = function (node, eventName, eventDetail, bubbles) {
+		var event = document.createEvent('CustomEvent');
+		event.initCustomEvent(eventName, !!bubbles, true, eventDetail); // event type, bubbling, cancelable
+		return node.dispatchEvent(event);
+	};
+
 	on.makeMultiHandle = makeMultiHandle;
 	on.closest = closest;
 	on.matches = matches;
