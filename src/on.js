@@ -217,7 +217,6 @@
 			// else it is a custom function
 			callback = function (e) {
 				var result = filter(e);
-				console.log('result', result);
 				if (result) {
 					e.filteredTarget = result;
 					handler(e, result);
