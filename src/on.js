@@ -51,6 +51,7 @@
 	}
 
 	var
+		INVALID_PROPS,
 		matches,
 		hasWheel = hasWheelTest(),
 		isWin = navigator.userAgent.indexOf('Windows')>-1,
@@ -116,33 +117,33 @@
 		// important note!
 		// starts paused
 		//
-        var
-            handle,
-            bHandle = on(document.body, 'click', function(event){
-                if(!node.contains(event.target)) {
-                    callback(event);
-                }
+		var
+			handle,
+			bHandle = on(document.body, 'click', function(event){
+				if(!node.contains(event.target)) {
+					callback(event);
+				}
 
-            });
+			});
 
-        handle = {
-            resume: function () {
-                setTimeout(function () {
-                    bHandle.resume();
-                }, 100);
-            },
-            pause: function () {
-                bHandle.pause();
-            },
-            remove: function () {
-                bHandle.remove();
-            }
-        };
+		handle = {
+			resume: function () {
+				setTimeout(function () {
+					bHandle.resume();
+				}, 100);
+			},
+			pause: function () {
+				bHandle.pause();
+			},
+			remove: function () {
+				bHandle.remove();
+			}
+		};
 
-        handle.pause();
+		handle.pause();
 
-        return handle;
-    }
+		return handle;
+	}
 
 	function getNode(str){
 		if(typeof str !== 'string'){
@@ -280,10 +281,15 @@
 		return h;
 	};
 
+	INVALID_PROPS = {
+		isTrusted:1
+	};
 	function mix(object, value){
 		if(typeof value === 'object') {
 			Object.keys(value).forEach(function (key) {
-				object[key] = value[key];
+				if(!INVALID_PROPS[key]) {
+					object[key] = value[key];
+				}
 			});
 		}else{
 			object.value = value;
