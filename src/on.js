@@ -145,30 +145,6 @@
 		return handle;
 	}
 
-	function onImageLoad (img, callback) {
-		function onImageLoad (e) {
-				var h = setInterval(function () {
-					if(img.naturalWidth){
-						e.width = img.naturalWidth;
-						e.naturalWidth = img.naturalWidth;
-						e.height = img.naturalHeight;
-						e.naturalHeight = img.naturalHeight;
-						callback(e);
-						clearInterval(h);
-					}
-				}, 100);
-			img.removeEventListener('load', onImageLoad);
-		}
-		img.addEventListener('load', onImageLoad);
-		return {
-			pause: function () {},
-			resume: function () {},
-			remove: function () {
-				img.addEventListener('load', onImageLoad);
-			}
-		}
-	}
-
 	function getNode(str){
 		if(typeof str !== 'string'){
 			return str;
@@ -254,10 +230,6 @@
 		if(eventType === 'clickoff'){
 			// custom - used for popups 'n stuff
 			return onClickoff(node, callback);
-		}
-
-		if (eventType === 'load' && node.localName === 'img'){
-			return onImageLoad(node, callback);
 		}
 
 		if(eventType === 'wheel'){
