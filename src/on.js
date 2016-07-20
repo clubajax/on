@@ -158,13 +158,16 @@
 					}
 				}, 100);
 			img.removeEventListener('load', onImageLoad);
+			img.removeEventListener('error', callback);
 		}
 		img.addEventListener('load', onImageLoad);
+		img.addEventListener('error', callback);
 		return {
 			pause: function () {},
 			resume: function () {},
 			remove: function () {
-				img.addEventListener('load', onImageLoad);
+				img.removeEventListener('load', onImageLoad);
+				img.removeEventListener('error', callback);
 			}
 		}
 	}
