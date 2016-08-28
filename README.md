@@ -17,7 +17,8 @@ It is recommended that you set the config.path of RequireJS to make `on` accessi
 path. If using as a global or with Browserify, it is suggested that you use an *NPM run script* to
 copy the `on` script to a location more convenient for your project.
 
-`on` has no dependencies.
+`on` has a dependency on the very well-done [keyboardevent-key-polyfill](https://github.com/cvan/keyboardevent-key-polyfill),
+which provides a [`KeyboardEvent.key` property](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key) in the event.
 
 ## Description
 
@@ -125,27 +126,4 @@ on does not need to have a node passed to it - you can pass an element ID or CSS
 
 ## License
 
-This is free and unencumbered software released into the public domain.
-
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
-
-In jurisdictions that recognize copyright laws, the author or authors
-of this software dedicate any and all copyright interest in the
-software to the public domain. We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and
-successors. We intend this dedication to be an overt act of
-relinquishment in perpetuity of all present and future rights to this
-software under copyright law.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-For more information, please refer to <http://unlicense.org/>
+This uses the [MIT license](./LICENSE). Feel free to use, and redistribute at will.
