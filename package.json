@@ -4,7 +4,7 @@
 	"author": "Mike Wilcox @clubajax",
 	"main":"src/on.js",
 	"description": "A simple library for handling DOM Node events.",
-	"license": "Unlicense",
+	"license": "MIT",
     "readmeFilename": "README.md",
 	"repository": {
         "type": "git",

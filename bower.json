@@ -5,7 +5,7 @@
     "Mike Wilcox <mwilcox@paycor.com>"
   ],
   "description": "A simple library for handling DOM Node events",
-  "license": "Unlicense",
+  "license": "MIT",
   "ignore": [
     "node_modules",
     "bower_components"
