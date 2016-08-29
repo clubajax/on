@@ -462,6 +462,14 @@
 		return node.dispatchEvent(event);
 	};
 
+	on.isAlphaNumeric = function (str) {
+		if(str.length > 1){ return false; }
+		if(str === ' '){ return false; }
+		if(!isNaN(Number(str))){ return true; }
+		var code = str.toLowerCase().charCodeAt(0);
+		return code >= 97 && code <= 122;
+	};
+
 	on.makeMultiHandle = makeMultiHandle;
 	on.closest = closest;
 	on.matches = matches;
