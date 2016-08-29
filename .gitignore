@@ -2,7 +2,6 @@
 .DS_Store?
 ._*
 
-/dist
 /tmp
 
 /node_modules
