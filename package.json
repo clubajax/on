@@ -1,8 +1,8 @@
 {
 	"name": "on",
-	"version": "1.5.3",
+	"version": "1.7.1",
 	"author": "Mike Wilcox @clubajax",
-	"main":"src/on.js",
+	"main":"dist/on.js",
 	"description": "A simple library for handling DOM Node events.",
 	"license": "MIT",
     "readmeFilename": "README.md",

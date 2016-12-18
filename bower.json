@@ -1,6 +1,6 @@
 {
   "name": "on",
-  "version": "1.5.3",
+  "version": "1.7.1",
   "authors": [
     "Mike Wilcox <mwilcox@paycor.com>"
   ],
@@ -10,7 +10,7 @@
     "node_modules",
     "bower_components"
   ],
-  "main": "src/on.js",
+  "main": "dist/on.js",
   "dependencies": {
     "keyboardevent-key-polyfill": "cvan/keyboardevent-key-polyfill#^1.0.2"
   }
