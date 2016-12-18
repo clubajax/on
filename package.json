@@ -1,6 +1,6 @@
 {
 	"name": "on",
-	"version": "1.7.1",
+	"version": "1.7.2",
 	"author": "Mike Wilcox @clubajax",
 	"main":"dist/on.js",
 	"description": "A simple library for handling DOM Node events.",
@@ -13,5 +13,8 @@
 	"devDependencies": {
 		"grunt": "^1.0.1",
 		"grunt-contrib-uglify": "^2.0.0"
+	},
+	"dependencies": {
+		"keyboardevent-key-polyfill": "cvan/keyboardevent-key-polyfill#^1.0.2"
 	}
 }
