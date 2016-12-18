@@ -158,7 +158,13 @@
 	'use strict';
 
 	try{
-		window.keyboardeventKeyPolyfill.polyfill();
+		if (typeof define === 'function' && define.amd) {
+			require('keyboardevent-key-polyfill');
+		} else if (typeof exports !== 'undefined' && typeof module !== 'undefined') {
+			module.require('keyboardevent-key-polyfill');
+		} else {
+			window.keyboardeventKeyPolyfill = keyboardeventKeyPolyfill;
+		}
 	}catch(e){
 		console.error('on/src/key-poly is required for the event.key property');
 	}
@@ -241,10 +247,13 @@
 		var
 			handle,
 			bHandle = on(document.body, 'click', function(event){
-				if(!node.contains(event.target)) {
+				var target = event.target;
+				if(target.nodeType !== 1){
+					target = target.parentNode;
+				}
+				if(target && !node.contains(target)) {
 					callback(event);
 				}
-
 			});
 
 		handle = {
