@@ -12,6 +12,6 @@
   ],
   "main": "dist/on.js",
   "dependencies": {
-    "keyboardevent-key-polyfill": "cvan/keyboardevent-key-polyfill#^1.0.2"
+    "keyboardevent-key-polyfill": "cvan/keyboardevent-key-polyfill#1.0.2"
   }
 }
