@@ -157,6 +157,8 @@
 
 	'use strict';
 
+	// v1.7.5
+	
 	try{
 		if (typeof define === 'function' && define.amd) {
 			require('keyboardevent-key-polyfill');
