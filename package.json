@@ -15,6 +15,6 @@
 		"grunt-contrib-uglify": "^2.0.0"
 	},
 	"dependencies": {
-		"keyboardevent-key-polyfill": "cvan/keyboardevent-key-polyfill#1.0.2"
+		"keyboardevent-key-polyfill": "cvan/keyboardevent-key-polyfill#v1.0.2"
 	}
 }
