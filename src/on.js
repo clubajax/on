@@ -40,7 +40,7 @@
 		if (typeof define === 'function' && define.amd) {
 			require('keyboardevent-key-polyfill');
 		} else if (typeof exports !== 'undefined' && typeof module !== 'undefined') {
-			module.require('keyboardeventKeyPolyfill');
+			module.require('keyboardevent-key-polyfill');
 		} else {
 			window.keyboardeventKeyPolyfill = keyboardeventKeyPolyfill;
 		}
