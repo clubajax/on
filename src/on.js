@@ -37,7 +37,7 @@
 	'use strict';
 
 	// v1.7.5
-	
+
 	try{
 		if (typeof define === 'function' && define.amd) {
 			require('keyboardevent-key-polyfill');
@@ -327,6 +327,9 @@
 		isTrusted:1
 	};
 	function mix(object, value){
+		if(!value){
+			return object;
+		}
 		if(typeof value === 'object') {
 			Object.keys(value).forEach(function (key) {
 				if(!INVALID_PROPS[key]) {
