@@ -160,10 +160,8 @@
 	// v1.7.5
 
 	try{
-		if (typeof define === 'function' && define.amd) {
+		if (typeof require === 'function') {
 			require('keyboardevent-key-polyfill');
-		} else if (typeof exports !== 'undefined' && typeof module !== 'undefined') {
-			module.require('keyboardevent-key-polyfill');
 		} else {
 			window.keyboardeventKeyPolyfill = keyboardeventKeyPolyfill;
 		}
