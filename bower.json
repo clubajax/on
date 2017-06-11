@@ -1,17 +1,14 @@
 {
   "name": "on",
-  "version": "1.7.8",
+  "version": "2.0.0",
   "authors": [
     "Mike Wilcox <mwilcox@paycor.com>"
   ],
-  "description": "A simple library for handling DOM Node events",
+  "description": "A library for making DOM Node event handling simple",
   "license": "MIT",
   "ignore": [
     "node_modules",
     "bower_components"
   ],
-  "main": "dist/on.js",
-  "dependencies": {
-    "keyboardevent-key-polyfill": "cvan/keyboardevent-key-polyfill#v1.0.2"
-  }
+  "main": "dist/on.js"
 }

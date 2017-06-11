@@ -1,9 +1,9 @@
 {
 	"name": "on",
-	"version": "1.7.8",
-	"author": "Mike Wilcox @clubajax",
+	"version": "2.0.0",
+	"author": "anm9tr@gmail.com",
 	"main":"dist/on.js",
-	"description": "A simple library for handling DOM Node events.",
+	"description": "A library for making DOM Node event handling simple",
 	"license": "MIT",
     "readmeFilename": "README.md",
 	"repository": {
@@ -13,8 +13,5 @@
 	"devDependencies": {
 		"grunt": "^1.0.1",
 		"grunt-contrib-uglify": "^2.0.0"
-	},
-	"dependencies": {
-		"keyboardevent-key-polyfill": "cvan/keyboardevent-key-polyfill#v1.0.2"
 	}
 }
