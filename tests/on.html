@@ -68,6 +68,9 @@
     <button id=cb1>clicker</button>
     <button id=cm1>multi</button>
 
+	<p>Test Button Event</p>
+	<button id=b5>Click or Enter</button>
+
     <p>Test css selectors</p>
     <div id=css>
         <span class='tab'><a href='#' >Tab 1</a></span>
@@ -81,10 +84,6 @@
 		Modal. Click in me, click out of me, mouse in and out of me.
 	</div>
 
-	<div id="rwd">
-		Browser width: NA
-	</div>
-	
 	<script>
 			console.log('on loaded');
 			var
@@ -138,11 +137,10 @@
 				console.log('remove!');
 			});
 
-			// test rwd
-			on('rwd:500,600,700', function (e) {
-				console.log('RWD:', e);
+			// test button
+			on('b5', 'button', function () {
+				console.log('Exec Button');
 			});
-
 
 			// test key handling
 			// expects the use of polyfill
