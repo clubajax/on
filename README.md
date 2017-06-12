@@ -60,13 +60,6 @@ Node.js is not supported since this is a DOM-based library.
 
 ## Features
 
-### Wheel Events
-Wheel events are normalized to a standard:
-	
-	delta, wheelY, wheelX
-	
-It also adds acceleration and deceleration to make Mac and Windows scroll wheels behave similarly.
-
 ### The KeyboardEvent Key property
 The [KeyboardEvent key](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent) property standardizes modern browsers 
 (Chrome 51+) and IE9-11 (which uses the key property, but from the old spec), 
@@ -75,7 +68,7 @@ which adds the actual letter or number pressed to the event, not just the key co
 Because the creator of this library uses a Mac, by opinion, the keys are normalized to a Mac. So 'Win' maps to 'Command'
 and 'Alt' maps to 'Option'. All others should be intuitive.
 
-#### clickoff
+### clickoff
 There is a custom `clickoff` event, to detect if you've clicked anywhere in the document
 other than the passed node. Useful for menus and modals.
 ```jsx harmony
@@ -86,20 +79,20 @@ other than the passed node. Useful for menus and modals.
 **NOTE** _a clickoff event starts paused due to potential side effects. You typically don't want the event
 to be listened to and fired until some other event has been triggered, like the opening of a modal._
 
-#### Multiple Event Types
+### Multiple Event Types
 There is support for multiple event types at once. The following example is useful for handling
 both desktop mouseovers and tablet clicks:
 ```jsx harmony
 var handle = on(node, 'mouseover,click', onStart);
 ```
-#### Multiple Key Events
+### Multiple Key Events
 A special multi-event can be used to listen for certain key strokes:
 ```jsx harmony
 on(input, 'keyup:Enter,Escape, ,Backspace', handler);
 on(input, 'keydown:a,b,c,d,A,B,C,D', handler);
 ````
 
-#### Filters
+### Filters
 `on` supports filtered selectors, as an additional parameter:
 ```jsx harmony
 on(node, 'click', '.tab', callback);
@@ -117,6 +110,13 @@ the second argument in the callback.
 
 Typically, this technique is used on a node with child elements. The `filteredTarget` will always be the parent, and 
 not the child. Under the hood it uses `on.closest`, described below.
+
+### Wheel Events
+Wheel events are normalized to a standard:
+	
+	delta, wheelY, wheelX
+	
+It also adds acceleration and deceleration to make Mac and Windows scroll wheels behave similarly.
 
 ## Additional Features
 
@@ -142,7 +142,8 @@ var handle = on.makeMultiHandle([
 ]);
 handle.pause();
 ```
-on.once`: Will remove itself after one event has fired:
+
+`on.once`: Will remove itself after one event has fired:
 ```jsx harmony
 on.once(node, 'click', function(){
     console.log('fires only once');
@@ -151,7 +152,8 @@ on.emit(node, 'click');
 on.emit(node, 'click');
 ```
 
-`on.closest` is a polyfilled version of [the spec](https://developer.mozilla.org/en-US/docs/Web/API/Element/closest), 
+`on.closest` is a polyfilled version of [the spec](https://developer.mozilla.org/en-US/docs/Web/API/Element/closest),
+ which finds an ascendant element which matches a selector:
 ```jsx harmony
 var correctAscendant =  on.closest(node, '.foo');
 ```
