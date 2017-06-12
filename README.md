@@ -22,8 +22,8 @@ which provides a [`KeyboardEvent.key` property](https://developer.mozilla.org/en
 
 ## Description
 
-`on` is a simple library for handling DOM node events. It has been under development and used in
-production for years. The code is very well established, tested, and used in enterprise production apps.
+`on` is a library for handling DOM node events in a simple way. It has been under development and used in
+production for years. The code is very well established, tested, and used in enterprise apps.
 
 The primary feature is it returns a handle, from which you can pause, resume, and remove the event.
 Handles are much easier to manipulate than using `removeEventListener` or jQuery's `off`, which
@@ -31,22 +31,22 @@ sometimes necessitates recreating sometimes complex or recursive function signat
 
 Think of handles as something like a returned Promise - an object with methods, with which you can
 control the event handler.
-
-	 var handle = on(node, 'click', function(event){
-		console.log('click event:', event);
-	 });
-	 handle.pause(); // click event will not fire
-	 handle.resume(); // click event fires again
-	 handle.remove(); // click event is permanently removed
-
+```jsx harmony
+ var handle = on(node, 'click', function(event){
+    console.log('click event:', event);
+ });
+ handle.pause(); // click event will not fire
+ handle.resume(); // click event fires again
+ handle.remove(); // click event is permanently removed
+```
 Events can be handled with any object from which you can attach events.
-
-	on(window, 'resize', onResize);
-	on(image, 'load', onImageLoaded);
-	on(input, 'keydown', onKey);
-
-`on.remove` is a very common feature, use for cleaning up events when destroying a widget.
-`on.pause` is less common - used for turning functionality on and off, like for popups.
+```jsx harmony
+on(window, 'resize', onResize);
+on(image, 'load', onImageLoaded);
+on(input, 'keydown', onKey);
+```
+on.remove` is a very common feature, use for cleaning up events when destroying a widget.  
+`on.pause` is less common - used for turning functionality on and off, like for popups or mouse tracking.
 
 ## Browser Support
 
@@ -59,33 +59,42 @@ Node.js is not supported since this is a DOM-based library.
 
 ## Features
 
-Wheel Events are normalized to a standard:
+#### Wheel Events
+Wheel events are normalized to a standard:
 	
 	delta, wheelY, wheelX
 	
 It also adds acceleration and deceleration to make Mac and Windows scroll wheels behave similarly.
 
-KeyEvents are standard, using the [`key` property](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key), 
+#### The key property
+The [KeyboardEvent key](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent) property standardizes modern browsers (Chrome 51+) and IE11 (which uses the key property, but from the old spec), 
 which adds the actual letter or number pressed to the event, not just the key code.
 
-The key property is cross browser, thanks to a polyfill by [chris van wiemeersch](https://github.com/cvan/keyboardevent-key-polyfill)
-which is included for convenience.
-
-There is also a custom `clickoff` event, to detect if you've clicked anywhere in the document
+#### clickoff
+There is a custom `clickoff` event, to detect if you've clicked anywhere in the document
 other than the passed node. Useful for menus and modals.
-
-	 var handle = on(node, 'clickoff', callback);
-	 handle.resume();
-	 //  callback fires if something other than node is clicked
-
+```jsx harmony
+ var handle = on(node, 'clickoff', callback);
+ handle.resume();
+ //  callback fires if something other than node is clicked
+```
 **NOTE** _a clickoff event starts paused due to potential side effects. You typically don't want the event
 to be listened to and fired until some other event has been triggered, like the opening of a modal._
 
+#### Multiple Event Types
 There is support for multiple event types at once. The following example is useful for handling
 both desktop mouseovers and tablet clicks:
+```jsx harmony
+var handle = on(node, 'mouseover,click', onStart);
+```
+#### Multiple Key Events
+A special multi-event can be used to listen for certain key strokes:
+```jsx harmony
+on(input, 'keyup:Enter,Escape, ,Backspace', handler);
+on(input, 'keydown:a,b,c,d,A,B,C,D', handler);
+````
 
-	 var handle = on(node, 'mouseover,click', onStart);
-
+#### Filters
 `on` supports filtered selectors, as an additional parameter:
 
 	 on(node, 'click', '.tab', callback);
@@ -99,31 +108,30 @@ the second argument in the callback.
 ## Additional Features
 
 `on.emit`: a convenience function to generate events on nodes:
-
-    on.emit(node, 'click', {value: 'hello'});
+```jsx harmony
+on.emit(node, 'click', {value: 'hello'});
+```
     
-on does not need to have a node passed to it - you can pass an element ID or CSS selector:
-
-    on('mynode', 'click', callback);
-    on('#mynode', 'click', callback);
-    on('.myUniqueClass', 'click', callback);
-
-`on.makeMultiHandle`: accepts an array and returns a single handle to operate on all at once:
-
-    var handle = on.makeMultiHandle([
-        on(node, 'mousedown', callback1),
-        on(node, 'mouseup', callback2)
-    ]);
-    handle.pause();
-
-`on.once`: Will remove itself after one event has fired:
-
-    on.once(node, 'click', function(){
-        console.log('fires only once');
-    });
-    on.emit(node, 'click');
-    on.emit(node, 'click');
-
+on does not need to have a node passed to it - you can pass an element ID:
+```jsx harmony
+on('mynode', 'click', callback);
+```
+on.makeMultiHandle`: accepts an array and returns a single handle to operate on all at once:
+```jsx harmony
+var handle = on.makeMultiHandle([
+    on(node, 'mousedown', callback1),
+    on(node, 'mouseup', callback2)
+]);
+handle.pause();
+```
+on.once`: Will remove itself after one event has fired:
+```jsx harmony
+on.once(node, 'click', function(){
+    console.log('fires only once');
+});
+on.emit(node, 'click');
+on.emit(node, 'click');
+```
 ## License
 
 This uses the [MIT license](./LICENSE). Feel free to use, and redistribute at will.
