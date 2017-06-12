@@ -10,7 +10,8 @@
 			font-family: sans-serif;
 		}
 		#modal,
-		#mousewheeltest{
+		#mousewheeltest,
+		#rwd{
 			padding: 10px;
 			position: absolute;
 			right: 20px;
@@ -21,6 +22,10 @@
 		}
 		#modal{
 			right: 240px;
+		}
+		#rwd{
+			top: 270px;
+			height: 50px;
 		}
 		p{
 			font-style: italic;
@@ -49,7 +54,10 @@
 	
 	<p>Test Key Events</p>
 	<input id='inp' />
-	
+
+	<p>Test Multi Key Events</p>
+	<input id='minp' />
+
     <p>Test simple connections</p>
     <button id=b1>clicker</button>
     <button id=b2>pause clicker</button>
@@ -71,6 +79,10 @@
 	
 	<div id='modal'>
 		Modal. Click in me, click out of me, mouse in and out of me.
+	</div>
+
+	<div id="rwd">
+		Browser width: NA
 	</div>
 	
 	<script>
@@ -126,6 +138,11 @@
 				console.log('remove!');
 			});
 
+			// test rwd
+			on('rwd:500,600,700', function (e) {
+				console.log('RWD:', e);
+			});
+
 
 			// test key handling
 			// expects the use of polyfill
@@ -139,6 +156,10 @@
 				//console.log('keypress', e.alphanumeric, e.key);
 			});
 
+			// test multi key handling
+			on('minp', 'keydown:a,b,c, ,ArrowDown,ArrowUp,ArrowLeft,ArrowRight,Enter,Escape', function(e){
+				console.log('keydown', e.key);
+			});
 
 			function delay(fn){
 				setTimeout(fn, 300);

@@ -211,11 +211,105 @@
 		};
 	}
 
+	function isMultiKey (eventName) {
+		return /,/.test(eventName) && !/click|mouse|resize|scroll/.test(eventName);
+	}
+
+	function keysToRegExp (eventName) {
+		return new RegExp(eventName.replace('keydown:', '').replace('keyup:', '').split(',').join('|'));
+	}
+
+	function onRWD (queries, callback) {
+		// TODO: Should probably be its own library. Dofferent function signature, little used, too big
+		// 400, 500, 600
+		var mqs = queries.split(',').map(function (str) {
+			var width = parseInt(str.trim());
+			var query = '(max-width:' + width + 'px)';
+			return {
+				width: width,
+				query: query,
+				mq: window.matchMedia(query)
+			};
+		});
+
+		mqs = mqs.concat(mqs.map(function (mq) {
+			var query = mq.query.replace('max', 'min');
+			return {
+				query: query,
+				width: mq.width,
+				mq: window.matchMedia(query)
+			}
+		}));
+
+		mqs.forEach(function (m) {
+			m.mq.addListener(onMediaChange);
+			onMediaChange({ srcElement: m });
+		});
+
+		function get (q) {
+			var subOne = /max/.test(q);
+			var i;
+			for (i = 0; i < mqs.length; i++) {
+				if (mqs[i].query === q) {
+					if (subOne) {
+						if (i - 1 >= 0) {
+							return mqs[i - 1];
+						} else {
+							return null;
+						}
+					} else {
+						return mqs[i];
+					}
+
+				}
+			}
+			return null;
+		}
+
+		return {
+			remove: function () {
+				mqs.forEach(function (m) {
+					m.mq.removeListener(onMediaChange);
+				});
+			}
+		};
+
+
+		function onMediaChange (e) {
+			const mq = e.srcElement;
+			if (mq.matches) {
+				var m = get(mq.media);
+				if (m) {
+					callback(m.width);
+				}
+			}
+		}
+	}
+
 	function on (node, eventName, filter, handler) {
 		var
 			callback,
 			handles,
-			handle;
+			handle,
+			keyRegExp;
+
+		if (typeof node === 'string' && /rwd:/.test(node)) {
+			console.log('RWD!');
+
+
+		}
+
+		if (isMultiKey(eventName)) {
+			keyRegExp = keysToRegExp(eventName);
+			callback = function (e) {
+				if (keyRegExp.test(e.key)) {
+					(handler || filter)(e);
+				}
+			};
+			eventName = /keydown/.test(eventName) ? 'keydown' : 'keyup';
+		} else {
+			//console.log('NOT');
+		}
 
 		if (/,/.test(eventName)) {
 			// handle multiple event types, like:
@@ -242,7 +336,7 @@
 					handler(e, result);
 				}
 			};
-		} else {
+		} else if (!callback) {
 			callback = filter || handler;
 		}
 
