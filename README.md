@@ -45,12 +45,13 @@ on(window, 'resize', onResize);
 on(image, 'load', onImageLoaded);
 on(input, 'keydown', onKey);
 ```
-on.remove` is a very common feature, use for cleaning up events when destroying a widget.  
+`on.remove` is a very common feature, use for cleaning up events when destroying a widget.  
 `on.pause` is less common - used for turning functionality on and off, like for popups or mouse tracking.
 
 ## Browser Support
 
-`on` supports all modern browsers IE9 and above. IE8 is not supported, `attachEvent` is not used.
+`on` supports all modern browsers including IE11. It probably works with IE9-10 but it is not tested.
+IE8 is not supported, `attachEvent` is not used.
 
 This library uses UMD, meaning it can be consumed with RequireJS, Browserify (CommonJS),
 or a standard browser global.
@@ -59,16 +60,20 @@ Node.js is not supported since this is a DOM-based library.
 
 ## Features
 
-#### Wheel Events
+### Wheel Events
 Wheel events are normalized to a standard:
 	
 	delta, wheelY, wheelX
 	
 It also adds acceleration and deceleration to make Mac and Windows scroll wheels behave similarly.
 
-#### The key property
-The [KeyboardEvent key](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent) property standardizes modern browsers (Chrome 51+) and IE11 (which uses the key property, but from the old spec), 
+### The KeyboardEvent Key property
+The [KeyboardEvent key](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent) property standardizes modern browsers 
+(Chrome 51+) and IE9-11 (which uses the key property, but from the old spec), 
 which adds the actual letter or number pressed to the event, not just the key code.
+
+Because the creator of this library uses a Mac, by opinion, the keys are normalized to a Mac. So 'Win' maps to 'Command'
+and 'Alt' maps to 'Option'. All others should be intuitive.
 
 #### clickoff
 There is a custom `clickoff` event, to detect if you've clicked anywhere in the document
@@ -96,20 +101,33 @@ on(input, 'keydown:a,b,c,d,A,B,C,D', handler);
 
 #### Filters
 `on` supports filtered selectors, as an additional parameter:
+```jsx harmony
+on(node, 'click', '.tab', callback);
+on(node, 'click', 'div', callback);
+on(node, 'click', '#main', callback);
+on(node, 'click', 'div["data-foo"=bar]', callback);
 
-	 on(node, 'click', '.tab', callback);
-	 on(node, 'click', 'div', callback);
-	 on(node, 'click', '#main', callback);
-	 on(node, 'click', 'div["data-foo"=bar]', callback);
+function callback (e, filtered) {
+	console.log('target:', e.filteredTarget)
+}
+````
 
 So as not to override the event, the targeted element will be in the event as `filteredTarget` as well as
 the second argument in the callback.
+
+Typically, this technique is used on a node with child elements. The `filteredTarget` will always be the parent, and 
+not the child. Under the hood it uses `on.closest`, described below.
 
 ## Additional Features
 
 `on.emit`: a convenience function to generate events on nodes:
 ```jsx harmony
 on.emit(node, 'click', {value: 'hello'});
+```
+`on.fire`: generates [Custom Events](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent):
+```jsx harmony
+on.fire(node, 'toggle-panel', {value: 'open'});
+
 ```
     
 on does not need to have a node passed to it - you can pass an element ID:
@@ -132,6 +150,12 @@ on.once(node, 'click', function(){
 on.emit(node, 'click');
 on.emit(node, 'click');
 ```
+
+`on.closest` is a polyfilled version of [the spec](https://developer.mozilla.org/en-US/docs/Web/API/Element/closest), 
+```jsx harmony
+var correctAscendant =  on.closest(node, '.foo');
+```
+
 ## License
 
 This uses the [MIT license](./LICENSE). Feel free to use, and redistribute at will.
