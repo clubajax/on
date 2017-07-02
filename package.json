@@ -1,7 +1,7 @@
 {
 	"name": "on",
 	"version": "1.7.8",
-	"author": "Mike Wilcox @clubajax",
+	"author": "anm9tr@gmail.com",
 	"main":"dist/on.js",
 	"description": "A simple library for handling DOM Node events.",
 	"license": "MIT",
