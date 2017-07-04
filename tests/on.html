@@ -10,7 +10,8 @@
 			font-family: sans-serif;
 		}
 		#modal,
-		#mousewheeltest{
+		#mousewheeltest,
+		#rwd{
 			padding: 10px;
 			position: absolute;
 			right: 20px;
@@ -21,6 +22,10 @@
 		}
 		#modal{
 			right: 240px;
+		}
+		#rwd{
+			top: 270px;
+			height: 50px;
 		}
 		p{
 			font-style: italic;
@@ -40,17 +45,19 @@
 			padding: 3px;
 		}
 	</style>
-	<script src="../bower_components/keyboardevent-key-polyfill/index.js"></script>
     <script src="../src/on.js"></script>
 
 </head>
 <body>
-	<h1>on test</h1>
+	<h1>on v2.0 test</h1>
 	<p>Results are in the console.</p>
 	
 	<p>Test Key Events</p>
 	<input id='inp' />
-	
+
+	<p>Test Multi Key Events</p>
+	<input id='minp' />
+
     <p>Test simple connections</p>
     <button id=b1>clicker</button>
     <button id=b2>pause clicker</button>
@@ -60,6 +67,9 @@
     <p>Test context</p>
     <button id=cb1>clicker</button>
     <button id=cm1>multi</button>
+
+	<p>Test Button Event</p>
+	<button id=b5>Click or Enter</button>
 
     <p>Test css selectors</p>
     <div id=css>
@@ -73,7 +83,7 @@
 	<div id='modal'>
 		Modal. Click in me, click out of me, mouse in and out of me.
 	</div>
-	
+
 	<script>
 			console.log('on loaded');
 			var
@@ -127,11 +137,15 @@
 				console.log('remove!');
 			});
 
+			// test button
+			on('b5', 'button', function () {
+				console.log('Exec Button');
+			});
 
 			// test key handling
 			// expects the use of polyfill
 			on('inp', 'keydown', function(e){
-				console.log('keydown', e.key, e.keyCode);
+				console.log('keydown', e.key, e.keyCode, e);
 			});
 			on('inp', 'keyup', function(e){
 				//console.log('keyup', e.alphanumeric, e.key);
@@ -140,6 +154,10 @@
 				//console.log('keypress', e.alphanumeric, e.key);
 			});
 
+			// test multi key handling
+			on('minp', 'keydown:a,b,c, ,ArrowDown,ArrowUp,ArrowLeft,ArrowRight,Enter,Escape', function(e){
+				console.log('keydown', e.key);
+			});
 
 			function delay(fn){
 				setTimeout(fn, 300);
