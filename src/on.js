@@ -346,7 +346,6 @@
 			return object;
 		}
 		if (typeof value === 'object') {
-			var keys = Object.keys(value);
 			for(var key in value){
 				if (!INVALID_PROPS[key] && typeof value[key] !== 'function') {
 					object[key] = value[key];
