@@ -347,7 +347,7 @@
 		}
 		if (typeof value === 'object') {
 			for(var key in value){
-				if (!INVALID_PROPS[key] && typeof value[key] !== 'function') {
+				if (!INVALID_PROPS[key]) {
 					object[key] = value[key];
 				}
 			}
