@@ -166,23 +166,26 @@
 	}
 
 	var ieKeys = {
+		//a: 'TEST',
 		Up: 'ArrowUp',
 		Down: 'ArrowDown',
 		Left: 'ArrowLeft',
 		Right: 'ArrowRight',
 		Esc: 'Escape',
 		Spacebar: ' ',
-		Win: 'Command',
-		Alt: 'Option'
+		Win: 'Command'
 	};
 
 	function normalizeKeyEvent (callback) {
 		// IE uses old spec
 		return function (e) {
 			if (ieKeys[e.key]) {
-				e.key = ieKeys[e.key];
+				var fakeEvent = mix({}, e);
+				fakeEvent.key = ieKeys[e.key];
+				callback(fakeEvent);
+			} else {
+				callback(e);
 			}
-			callback(e);
 		}
 	}
 
@@ -343,11 +346,12 @@
 			return object;
 		}
 		if (typeof value === 'object') {
-			Object.keys(value).forEach(function (key) {
-				if (!INVALID_PROPS[key]) {
+			var keys = Object.keys(value);
+			for(var key in value){
+				if (!INVALID_PROPS[key] && typeof value[key] !== 'function') {
 					object[key] = value[key];
 				}
-			});
+			}
 		} else {
 			object.value = value;
 		}
