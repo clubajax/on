@@ -172,8 +172,7 @@
 		Right: 'ArrowRight',
 		Esc: 'Escape',
 		Spacebar: ' ',
-		Win: 'Command',
-		Alt: 'Option'
+		Win: 'Command'
 	};
 
 	function normalizeKeyEvent (callback) {
