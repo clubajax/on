@@ -62,6 +62,7 @@
 
 	function makeMultiHandle (handles) {
 		return {
+			state: 'resumed',
 			remove: function () {
 				handles.forEach(function (h) {
 					// allow for a simple function in the list
@@ -73,6 +74,7 @@
 				});
 				handles = [];
 				this.remove = this.pause = this.resume = function () {};
+				this.state = 'removed';
 			},
 			pause: function () {
 				handles.forEach(function (h) {
@@ -80,6 +82,7 @@
 						h.pause();
 					}
 				});
+				this.state = 'paused';
 			},
 			resume: function () {
 				handles.forEach(function (h) {
@@ -87,6 +90,7 @@
 						h.resume();
 					}
 				});
+				this.state = 'resumed';
 			}
 		};
 	}
@@ -108,16 +112,20 @@
 			});
 
 		handle = {
+			state: 'resumed',
 			resume: function () {
 				setTimeout(function () {
 					bHandle.resume();
 				}, 100);
+				this.state = 'resumed';
 			},
 			pause: function () {
 				bHandle.pause();
+				this.state = 'paused';
 			},
 			remove: function () {
 				bHandle.remove();
+				this.state = 'removed';
 			}
 		};
 
