@@ -6,8 +6,7 @@
 	} else if (typeof exports === 'object') {
 		module.exports = factory();
 	} else {
-		root.returnExports = factory();
-		window.on = factory();
+		root.returnExports = window.on = factory();
 	}
 }(this, function () {
 	'use strict';
@@ -54,85 +53,139 @@
 		return null;
 	}
 
-	function closestFilter (element, selector) {
-		return function (e) {
-			return closest(e.target, selector, element);
-		};
-	}
+	// main function
 
-	function makeMultiHandle (handles) {
-		return {
-			state: 'resumed',
+	function on (node, eventName, filter, handler) {
+		// normalize parameters
+		if (typeof node == 'string') {
+			node = getNodeById(node);
+		}
+
+		// prepare a callback
+		var callback = makeCallback(node, filter, handler);
+
+		// functional event
+		if (typeof eventName == 'function') {
+			return eventName(node, callback);
+		}
+
+		// special case: keydown/keyup with a list of expected keys
+		// TODO: consider replacing with a better event function
+		var keyEvent = /^(keyup|keydown):(.+)$/.exec(eventName);
+		if (keyEvent) {
+			return on(node,
+				onKeyEvent(keyEvent[1], new RegExp(keyEvent[2].split(',').join('|'))),
+				callback);
+		}
+
+		// handle multiple event types, like: on(node, 'mouseup, mousedown', callback);
+		if (/,/.test(eventName)) {
+			return makeMultiHandle(eventName.split(',').map(function (name) {
+				return name.trim();
+			}).filter(function (name) {
+				return name;
+			}).map(function (name) {
+				return on(node, name, callback);
+			}));
+		}
+
+		// handle registered functional events
+		if (Object.prototype.hasOwnProperty.call(on.events, eventName)) {
+			return on.events[eventName](node, callback);
+		}
+
+		// special case: loading an image
+		if (eventName === 'load' && node.tagName.toLowerCase() === 'img') {
+			return onImageLoad(node, callback);
+		}
+
+		// special case: mousewheel
+		if (eventName === 'wheel') {
+			// pass through, but first curry callback to wheel events
+			callback = normalizeWheelEvent(callback);
+			if (!hasWheel) {
+				// old Firefox, old IE, Chrome
+				return makeMultiHandle([
+					on(node, 'DOMMouseScroll', callback),
+					on(node, 'mousewheel', callback)
+				]);
+			}
+		}
+
+		// special case: keyboard
+		if (/^key/.test(eventName)) {
+			callback = normalizeKeyEvent(callback);
+		}
+
+		// default case
+		node.addEventListener(eventName, callback, false);
+
+		handle = {
 			remove: function () {
-				handles.forEach(function (h) {
-					// allow for a simple function in the list
-					if (h.remove) {
-						h.remove();
-					} else if (typeof h === 'function') {
-						h();
-					}
-				});
-				handles = [];
+				node.removeEventListener(eventName, callback, false);
+				node = callback = null;
 				this.remove = this.pause = this.resume = function () {};
-				this.state = 'removed';
 			},
 			pause: function () {
-				handles.forEach(function (h) {
-					if (h.pause) {
-						h.pause();
-					}
-				});
-				this.state = 'paused';
+				node.removeEventListener(eventName, callback, false);
 			},
 			resume: function () {
-				handles.forEach(function (h) {
-					if (h.resume) {
-						h.resume();
-					}
-				});
-				this.state = 'resumed';
+				node.addEventListener(eventName, callback, false);
 			}
 		};
+
+		return handle;
 	}
 
-	function onClickoff (node, callback) {
-		// important note!
-		// starts paused
-		//
-		var
-			handle,
-			bHandle = on(document.body, 'click', function (event) {
-				var target = event.target;
+	// registered functional events
+	on.events = {
+		// handle click and Enter
+		button: function (node, callback) {
+			return makeMultiHandle([
+				on(node, 'click', callback),
+				on(node, 'keyup:Enter', callback)
+			]);
+		},
+
+		// custom - used for popups 'n stuff
+		clickoff: function (node, callback) {
+			// important note!
+			// starts paused
+			//
+			var bHandle = on(node.ownerDocument.documentElement, 'click', function (e) {
+				var target = e.target;
 				if (target.nodeType !== 1) {
 					target = target.parentNode;
 				}
 				if (target && !node.contains(target)) {
-					callback(event);
+					callback(e);
 				}
 			});
 
-		handle = {
-			state: 'resumed',
-			resume: function () {
-				setTimeout(function () {
-					bHandle.resume();
-				}, 100);
-				this.state = 'resumed';
-			},
-			pause: function () {
-				bHandle.pause();
-				this.state = 'paused';
-			},
-			remove: function () {
-				bHandle.remove();
-				this.state = 'removed';
-			}
-		};
+			var handle = {
+				state: 'resumed',
+				resume: function () {
+					setTimeout(function () {
+						bHandle.resume();
+					}, 100);
+					this.state = 'resumed';
+				},
+				pause: function () {
+					bHandle.pause();
+					this.state = 'paused';
+				},
+				remove: function () {
+					bHandle.remove();
+					this.state = 'removed';
+				}
+			};
+			handle.pause();
 
-		handle.pause();
+			return handle;
+		}
+	};
 
-		return handle;
-	}
+	// internal event handlers
 
 	function onImageLoad (img, callback) {
 		function onImageLoad (e) {
@@ -162,15 +215,25 @@
 		}
 	}
 
-	function getNode (str) {
-		if (typeof str !== 'string') {
-			return str;
+	// internal utilities
+
+	var INVALID_PROPS = {
+		isTrusted: 1
+	};
+	function mix (object, value) {
+		if (!value) {
+			return object;
 		}
-		var node = document.getElementById(str);
-		if (!node) {
-			console.error('`on` Could not find:', str);
+		if (typeof value === 'object') {
+			for(var key in value){
+				if (!INVALID_PROPS[key]) {
+					object[key] = value[key];
+				}
+			}
+		} else {
+			object.value = value;
 		}
-		return node;
+		return object;
 	}
 
 	var ieKeys = {
@@ -222,113 +285,72 @@
 		};
 	}
 
-	function isMultiKey (eventName) {
-		return /,/.test(eventName) && !/click|mouse|resize|scroll/.test(eventName);
+	function closestFilter (element, selector) {
+		return function (e) {
+			return closest(e.target, selector, element);
+		};
 	}
 
-	function keysToRegExp (eventName) {
-		return new RegExp(eventName.replace('keydown:', '').replace('keyup:', '').split(',').join('|'));
+	function makeMultiHandle (handles) {
+		return {
+			state: 'resumed',
+			remove: function () {
+				handles.forEach(function (h) {
+					// allow for a simple function in the list
+					if (h.remove) {
+						h.remove();
+					} else if (typeof h === 'function') {
+						h();
+					}
+				});
+				handles = [];
+				this.remove = this.pause = this.resume = function () {};
+				this.state = 'removed';
+			},
+			pause: function () {
+				handles.forEach(function (h) {
+					if (h.pause) {
+						h.pause();
+					}
+				});
+				this.state = 'paused';
+			},
+			resume: function () {
+				handles.forEach(function (h) {
+					if (h.resume) {
+						h.resume();
+					}
+				});
+				this.state = 'resumed';
+			}
+		};
 	}
 
-	function on (node, eventName, filter, handler) {
-		var
-			callback,
-			handles,
-			handle,
-			keyRegExp;
-
-		if (isMultiKey(eventName)) {
-			keyRegExp = keysToRegExp(eventName);
-			callback = function (e) {
-				if (keyRegExp.test(e.key)) {
-					(handler || filter)(e);
-				}
-			};
-			eventName = /keydown/.test(eventName) ? 'keydown' : 'keyup';
+	function getNodeById (id) {
+		var node = document.getElementById(id);
+		if (!node) {
+			console.error('`on` Could not find:', id);
 		}
+		return node;
+	}
 
-		if (/,/.test(eventName)) {
-			// handle multiple event types, like:
-			// on(node, 'mouseup, mousedown', callback);
-			//
-			handles = [];
-			eventName.split(',').forEach(function (eStr) {
-				handles.push(on(node, eStr.trim(), filter, handler));
-			});
-			return makeMultiHandle(handles);
-		}
-
-		if(eventName === 'button'){
-			// handle click and Enter
-			return makeMultiHandle([
-				on(node, 'click', filter, handle),
-				on(node, 'keyup:Enter', filter, handle)
-			]);
-		}
-
-		node = getNode(node);
-
+	function makeCallback (node, filter, handler) {
 		if (filter && handler) {
-			if (typeof filter === 'string') {
+			if (typeof filter == 'string') {
 				filter = closestFilter(node, filter);
 			}
-			// else it is a custom function
-			callback = function (e) {
+			return function (e) {
 				var result = filter(e);
 				if (result) {
 					e.filteredTarget = result;
 					handler(e, result);
 				}
 			};
-		} else if (!callback) {
-			callback = filter || handler;
 		}
-
-		if (eventName === 'clickoff') {
-			// custom - used for popups 'n stuff
-			return onClickoff(node, callback);
-		}
-
-		if (eventName === 'load' && node.localName === 'img') {
-			return onImageLoad(node, callback);
-		}
-
-		if (eventName === 'wheel') {
-			// mousewheel events, natch
-			if (hasWheel) {
-				// pass through, but first curry callback to wheel events
-				callback = normalizeWheelEvent(callback);
-			} else {
-				// old Firefox, old IE, Chrome
-				return makeMultiHandle([
-					on(node, 'DOMMouseScroll', normalizeWheelEvent(callback)),
-					on(node, 'mousewheel', normalizeWheelEvent(callback))
-				]);
-			}
-		}
-
-		if (/key/.test(eventName)) {
-			callback = normalizeKeyEvent(callback);
-		}
-
-		node.addEventListener(eventName, callback, false);
-
-		handle = {
-			remove: function () {
-				node.removeEventListener(eventName, callback, false);
-				node = callback = null;
-				this.remove = this.pause = this.resume = function () {};
-			},
-			pause: function () {
-				node.removeEventListener(eventName, callback, false);
-			},
-			resume: function () {
-				node.addEventListener(eventName, callback, false);
-			}
-		};
-
-		return handle;
+		return filter || handler;
 	}
+
+	// public functions
 
 	on.once = function (node, eventName, filter, callback) {
 		var h;
@@ -346,50 +368,23 @@
 		return h;
 	};
 
-	INVALID_PROPS = {
-		isTrusted: 1
-	};
-	function mix (object, value) {
-		if (!value) {
-			return object;
-		}
-		if (typeof value === 'object') {
-			for(var key in value){
-				if (!INVALID_PROPS[key]) {
-					object[key] = value[key];
-				}
-			}
-		} else {
-			object.value = value;
-		}
-		return object;
-	}
-
 	on.emit = function (node, eventName, value) {
-		node = getNode(node);
-		var event = document.createEvent('HTMLEvents');
+		node = typeof node == 'string' ? getNodeById(node) : node;
+		var event = node.ownerDocument.createEvent('HTMLEvents');
 		event.initEvent(eventName, true, true); // event type, bubbling, cancelable
 		return node.dispatchEvent(mix(event, value));
 	};
 
 	on.fire = function (node, eventName, eventDetail, bubbles) {
-		var event = document.createEvent('CustomEvent');
+		node = typeof node == 'string' ? getNodeById(node) : node;
+		var event = node.ownerDocument.createEvent('CustomEvent');
 		event.initCustomEvent(eventName, !!bubbles, true, eventDetail); // event type, bubbling, cancelable, value
 		return node.dispatchEvent(event);
 	};
 
+	// TODO: undocumented and unused? why is an one-liner available as a function?
 	on.isAlphaNumeric = function (str) {
-		if (str.length > 1) {
-			return false;
-		}
-		if (str === ' ') {
-			return false;
-		}
-		if (!isNaN(Number(str))) {
-			return true;
-		}
-		var code = str.toLowerCase().charCodeAt(0);
-		return code >= 97 && code <= 122;
+		return /^[0-9a-z]$/i.test(str);
 	};
 
 	on.makeMultiHandle = makeMultiHandle;
@@ -397,5 +392,4 @@
 	on.matches = matches;
 
 	return on;
-
 }));

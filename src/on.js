@@ -6,30 +6,188 @@
 	} else if (typeof exports === 'object') {
 		module.exports = factory();
 	} else {
-		root.returnExports = factory();
-		window.on = factory();
+		root.returnExports = window.on = factory();
 	}
 }(this, function () {
 	'use strict';
 
-	function hasWheelTest () {
+	// main function
+
+	function on (node, eventName, filter, handler) {
+		// normalize parameters
+		if (typeof node == 'string') {
+			node = getNodeById(node);
+		}
+
+		// prepare a callback
+		var callback = makeCallback(node, filter, handler);
+
+		// functional event
+		if (typeof eventName == 'function') {
+			return eventName(node, callback);
+		}
+
+		// special case: keydown/keyup with a list of expected keys
+		// TODO: consider replacing with an explicit event function:
+		// var h = on(node, onKeyEvent('keyup', /Enter,Esc/), callback);
+		var keyEvent = /^(keyup|keydown):(.+)$/.exec(eventName);
+		if (keyEvent) {
+			return onKeyEvent(keyEvent[1], new RegExp(keyEvent[2].split(',').join('|')))(node, callback);
+		}
+
+		// handle multiple event types, like: on(node, 'mouseup, mousedown', callback);
+		if (/,/.test(eventName)) {
+			return makeMultiHandle(eventName.split(',').map(function (name) {
+				return name.trim();
+			}).filter(function (name) {
+				return name;
+			}).map(function (name) {
+				return on(node, name, callback);
+			}));
+		}
+
+		// handle registered functional events
+		if (Object.prototype.hasOwnProperty.call(on.events, eventName)) {
+			return on.events[eventName](node, callback);
+		}
+
+		// special case: loading an image
+		if (eventName === 'load' && node.tagName.toLowerCase() === 'img') {
+			return onImageLoad(node, callback);
+		}
+
+		// special case: mousewheel
+		if (eventName === 'wheel') {
+			// pass through, but first curry callback to wheel events
+			callback = normalizeWheelEvent(callback);
+			if (!hasWheel) {
+				// old Firefox, old IE, Chrome
+				return makeMultiHandle([
+					on(node, 'DOMMouseScroll', callback),
+					on(node, 'mousewheel', callback)
+				]);
+			}
+		}
+
+		// special case: keyboard
+		if (/^key/.test(eventName)) {
+			callback = normalizeKeyEvent(callback);
+		}
+
+		// default case
+		return onDomEvent(node, eventName, callback);
+	}
+
+	// registered functional events
+	on.events = {
+		// handle click and Enter
+		button: function (node, callback) {
+			return makeMultiHandle([
+				on(node, 'click', callback),
+				on(node, 'keyup:Enter', callback)
+			]);
+		},
+
+		// custom - used for popups 'n stuff
+		clickoff: function (node, callback) {
+			// important note!
+			// starts paused
+			//
+			var bHandle = on(node.ownerDocument.documentElement, 'click', function (e) {
+				var target = e.target;
+				if (target.nodeType !== 1) {
+					target = target.parentNode;
+				}
+				if (target && !node.contains(target)) {
+					callback(e);
+				}
+			});
+
+			var handle = {
+				state: 'resumed',
+				resume: function () {
+					setTimeout(function () {
+						bHandle.resume();
+					}, 100);
+					this.state = 'resumed';
+				},
+				pause: function () {
+					bHandle.pause();
+					this.state = 'paused';
+				},
+				remove: function () {
+					bHandle.remove();
+					this.state = 'removed';
+				}
+			};
+			handle.pause();
+
+			return handle;
+		}
+	};
+
+	// internal event handlers
+
+	function onDomEvent (node, eventName, callback) {
+		node.addEventListener(eventName, callback, false);
+		return {
+			remove: function () {
+				node.removeEventListener(eventName, callback, false);
+				node = callback = null;
+				this.remove = this.pause = this.resume = function () {};
+			},
+			pause: function () {
+				node.removeEventListener(eventName, callback, false);
+			},
+			resume: function () {
+				node.addEventListener(eventName, callback, false);
+			}
+		};
+	}
+
+	function onImageLoad (node, callback) {
+		var handle = makeMultiHandle([
+			onDomEvent(node, 'load', onImageLoad),
+			on(node, 'error', callback)
+		]);
+
+		return handle;
+
+		function onImageLoad (e) {
+			var interval = setInterval(function () {
+				// TODO: what if an image is 0x0? is it possible?
+				if (node.naturalWidth || node.naturalHeight) {
+					e.width  = e.naturalWidth  = node.naturalWidth;
+					e.height = e.naturalHeight = node.naturalHeight;
+					callback(e);
+					clearInterval(interval);
+				}
+			}, 100);
+			handle.remove();
+		}
+	}
+
+	function onKeyEvent (keyEventName, re) {
+		return function (node, callback) {
+			return on(node, keyEventName, function (e) {
+				if (re.test(e.key)) {
+					callback(e);
+				}
+			});
+		};
+	}
+
+	// internal utilities
+
+	var hasWheel = (function hasWheelTest () {
 		var
 			isIE = navigator.userAgent.indexOf('Trident') > -1,
 			div = document.createElement('div');
 		return "onwheel" in div || "wheel" in div ||
 			(isIE && document.implementation.hasFeature("Events.wheel", "3.0")); // IE feature detection
-	}
+	})();
 
-	var
-		INVALID_PROPS,
-		matches,
-		hasWheel = hasWheelTest(),
-		isWin = navigator.userAgent.indexOf('Windows') > -1,
-		FACTOR = isWin ? 10 : 0.1,
-		XLR8 = 0,
-		mouseWheelHandle;
-
-
+	var matches;
 	['matches', 'matchesSelector', 'webkit', 'moz', 'ms', 'o'].some(function (name) {
 		if (name.length < 7) { // prefix
 			name += 'MatchesSelector';
@@ -54,9 +212,82 @@
 		return null;
 	}
 
+	var INVALID_PROPS = {
+		isTrusted: 1
+	};
+	function mix (object, value) {
+		if (!value) {
+			return object;
+		}
+		if (typeof value === 'object') {
+			for(var key in value){
+				if (!INVALID_PROPS[key]) {
+					object[key] = value[key];
+				}
+			}
+		} else {
+			object.value = value;
+		}
+		return object;
+	}
+
+	var ieKeys = {
+		//a: 'TEST',
+		Up: 'ArrowUp',
+		Down: 'ArrowDown',
+		Left: 'ArrowLeft',
+		Right: 'ArrowRight',
+		Esc: 'Escape',
+		Spacebar: ' ',
+		Win: 'Command'
+	};
+
+	function normalizeKeyEvent (callback) {
+		// IE uses old spec
+		return function (e) {
+			if (ieKeys[e.key]) {
+				var fakeEvent = mix({}, e);
+				fakeEvent.key = ieKeys[e.key];
+				callback(fakeEvent);
+			} else {
+				callback(e);
+			}
+		}
+	}
+
+	var
+		FACTOR = navigator.userAgent.indexOf('Windows') > -1 ? 10 : 0.1,
+		XLR8 = 0,
+		mouseWheelHandle;
+
+	function normalizeWheelEvent (callback) {
+		// normalizes all browsers' events to a standard:
+		// delta, wheelY, wheelX
+		// also adds acceleration and deceleration to make
+		// Mac and Windows behave similarly
+		return function (e) {
+			XLR8 += FACTOR;
+			var
+				deltaY = Math.max(-1, Math.min(1, (e.wheelDeltaY || e.deltaY))),
+				deltaX = Math.max(-10, Math.min(10, (e.wheelDeltaX || e.deltaX)));
+
+			deltaY = deltaY <= 0 ? deltaY - XLR8 : deltaY + XLR8;
+
+			e.delta = deltaY;
+			e.wheelY = deltaY;
+			e.wheelX = deltaX;
+
+			clearTimeout(mouseWheelHandle);
+			mouseWheelHandle = setTimeout(function () {
+				XLR8 = 0;
+			}, 300);
+			callback(e);
+		};
+	}
+
 	function closestFilter (element, selector) {
 		return function (e) {
-			return closest(e.target, selector, element);
+			return on.closest(e.target, selector, element);
 		};
 	}
 
@@ -95,240 +326,31 @@
 		};
 	}
 
-	function onClickoff (node, callback) {
-		// important note!
-		// starts paused
-		//
-		var
-			handle,
-			bHandle = on(document.body, 'click', function (event) {
-				var target = event.target;
-				if (target.nodeType !== 1) {
-					target = target.parentNode;
-				}
-				if (target && !node.contains(target)) {
-					callback(event);
-				}
-			});
-
-		handle = {
-			state: 'resumed',
-			resume: function () {
-				setTimeout(function () {
-					bHandle.resume();
-				}, 100);
-				this.state = 'resumed';
-			},
-			pause: function () {
-				bHandle.pause();
-				this.state = 'paused';
-			},
-			remove: function () {
-				bHandle.remove();
-				this.state = 'removed';
-			}
-		};
-
-		handle.pause();
-
-		return handle;
-	}
-
-	function onImageLoad (img, callback) {
-		function onImageLoad (e) {
-			var h = setInterval(function () {
-				if (img.naturalWidth) {
-					e.width = img.naturalWidth;
-					e.naturalWidth = img.naturalWidth;
-					e.height = img.naturalHeight;
-					e.naturalHeight = img.naturalHeight;
-					callback(e);
-					clearInterval(h);
-				}
-			}, 100);
-			img.removeEventListener('load', onImageLoad);
-			img.removeEventListener('error', callback);
-		}
-
-		img.addEventListener('load', onImageLoad);
-		img.addEventListener('error', callback);
-		return {
-			pause: function () {},
-			resume: function () {},
-			remove: function () {
-				img.removeEventListener('load', onImageLoad);
-				img.removeEventListener('error', callback);
-			}
-		}
-	}
-
-	function getNode (str) {
-		if (typeof str !== 'string') {
-			return str;
-		}
-		var node = document.getElementById(str);
+	function getNodeById (id) {
+		var node = document.getElementById(id);
 		if (!node) {
-			console.error('`on` Could not find:', str);
+			console.error('`on` Could not find:', id);
 		}
 		return node;
 	}
 
-	var ieKeys = {
-		//a: 'TEST',
-		Up: 'ArrowUp',
-		Down: 'ArrowDown',
-		Left: 'ArrowLeft',
-		Right: 'ArrowRight',
-		Esc: 'Escape',
-		Spacebar: ' ',
-		Win: 'Command'
-	};
-
-	function normalizeKeyEvent (callback) {
-		// IE uses old spec
-		return function (e) {
-			if (ieKeys[e.key]) {
-				var fakeEvent = mix({}, e);
-				fakeEvent.key = ieKeys[e.key];
-				callback(fakeEvent);
-			} else {
-				callback(e);
-			}
-		}
-	}
-
-	function normalizeWheelEvent (callback) {
-		// normalizes all browsers' events to a standard:
-		// delta, wheelY, wheelX
-		// also adds acceleration and deceleration to make
-		// Mac and Windows behave similarly
-		return function (e) {
-			XLR8 += FACTOR;
-			var
-				deltaY = Math.max(-1, Math.min(1, (e.wheelDeltaY || e.deltaY))),
-				deltaX = Math.max(-10, Math.min(10, (e.wheelDeltaX || e.deltaX)));
-
-			deltaY = deltaY <= 0 ? deltaY - XLR8 : deltaY + XLR8;
-
-			e.delta = deltaY;
-			e.wheelY = deltaY;
-			e.wheelX = deltaX;
-
-			clearTimeout(mouseWheelHandle);
-			mouseWheelHandle = setTimeout(function () {
-				XLR8 = 0;
-			}, 300);
-			callback(e);
-		};
-	}
-
-	function isMultiKey (eventName) {
-		return /,/.test(eventName) && !/click|mouse|resize|scroll/.test(eventName);
-	}
-
-	function keysToRegExp (eventName) {
-		return new RegExp(eventName.replace('keydown:', '').replace('keyup:', '').split(',').join('|'));
-	}
-
-	function on (node, eventName, filter, handler) {
-		var
-			callback,
-			handles,
-			handle,
-			keyRegExp;
-
-		if (isMultiKey(eventName)) {
-			keyRegExp = keysToRegExp(eventName);
-			callback = function (e) {
-				if (keyRegExp.test(e.key)) {
-					(handler || filter)(e);
-				}
-			};
-			eventName = /keydown/.test(eventName) ? 'keydown' : 'keyup';
-		}
-
-		if (/,/.test(eventName)) {
-			// handle multiple event types, like:
-			// on(node, 'mouseup, mousedown', callback);
-			//
-			handles = [];
-			eventName.split(',').forEach(function (eStr) {
-				handles.push(on(node, eStr.trim(), filter, handler));
-			});
-			return makeMultiHandle(handles);
-		}
-
-		if(eventName === 'button'){
-			// handle click and Enter
-			return makeMultiHandle([
-				on(node, 'click', filter, handle),
-				on(node, 'keyup:Enter', filter, handle)
-			]);
-		}
-
-		node = getNode(node);
-
+	function makeCallback (node, filter, handler) {
 		if (filter && handler) {
-			if (typeof filter === 'string') {
+			if (typeof filter == 'string') {
 				filter = closestFilter(node, filter);
 			}
-			// else it is a custom function
-			callback = function (e) {
+			return function (e) {
 				var result = filter(e);
 				if (result) {
 					e.filteredTarget = result;
 					handler(e, result);
 				}
 			};
-		} else if (!callback) {
-			callback = filter || handler;
 		}
-
-		if (eventName === 'clickoff') {
-			// custom - used for popups 'n stuff
-			return onClickoff(node, callback);
-		}
-
-		if (eventName === 'load' && node.localName === 'img') {
-			return onImageLoad(node, callback);
-		}
-
-		if (eventName === 'wheel') {
-			// mousewheel events, natch
-			if (hasWheel) {
-				// pass through, but first curry callback to wheel events
-				callback = normalizeWheelEvent(callback);
-			} else {
-				// old Firefox, old IE, Chrome
-				return makeMultiHandle([
-					on(node, 'DOMMouseScroll', normalizeWheelEvent(callback)),
-					on(node, 'mousewheel', normalizeWheelEvent(callback))
-				]);
-			}
-		}
-
-		if (/key/.test(eventName)) {
-			callback = normalizeKeyEvent(callback);
-		}
-
-		node.addEventListener(eventName, callback, false);
-
-		handle = {
-			remove: function () {
-				node.removeEventListener(eventName, callback, false);
-				node = callback = null;
-				this.remove = this.pause = this.resume = function () {};
-			},
-			pause: function () {
-				node.removeEventListener(eventName, callback, false);
-			},
-			resume: function () {
-				node.addEventListener(eventName, callback, false);
-			}
-		};
-
-		return handle;
+		return filter || handler;
 	}
+
+	// public functions
 
 	on.once = function (node, eventName, filter, callback) {
 		var h;
@@ -346,50 +368,23 @@
 		return h;
 	};
 
-	INVALID_PROPS = {
-		isTrusted: 1
-	};
-	function mix (object, value) {
-		if (!value) {
-			return object;
-		}
-		if (typeof value === 'object') {
-			for(var key in value){
-				if (!INVALID_PROPS[key]) {
-					object[key] = value[key];
-				}
-			}
-		} else {
-			object.value = value;
-		}
-		return object;
-	}
-
 	on.emit = function (node, eventName, value) {
-		node = getNode(node);
-		var event = document.createEvent('HTMLEvents');
+		node = typeof node == 'string' ? getNodeById(node) : node;
+		var event = node.ownerDocument.createEvent('HTMLEvents');
 		event.initEvent(eventName, true, true); // event type, bubbling, cancelable
 		return node.dispatchEvent(mix(event, value));
 	};
 
 	on.fire = function (node, eventName, eventDetail, bubbles) {
-		var event = document.createEvent('CustomEvent');
+		node = typeof node == 'string' ? getNodeById(node) : node;
+		var event = node.ownerDocument.createEvent('CustomEvent');
 		event.initCustomEvent(eventName, !!bubbles, true, eventDetail); // event type, bubbling, cancelable, value
 		return node.dispatchEvent(event);
 	};
 
+	// TODO: undocumented and unused? why is an one-liner available as a function?
 	on.isAlphaNumeric = function (str) {
-		if (str.length > 1) {
-			return false;
-		}
-		if (str === ' ') {
-			return false;
-		}
-		if (!isNaN(Number(str))) {
-			return true;
-		}
-		var code = str.toLowerCase().charCodeAt(0);
-		return code >= 97 && code <= 122;
+		return /^[0-9a-z]$/i.test(str);
 	};
 
 	on.makeMultiHandle = makeMultiHandle;
@@ -397,5 +392,4 @@
 	on.matches = matches;
 
 	return on;
-
 }));
