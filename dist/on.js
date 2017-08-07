@@ -11,48 +11,6 @@
 }(this, function () {
 	'use strict';
 
-	function hasWheelTest () {
-		var
-			isIE = navigator.userAgent.indexOf('Trident') > -1,
-			div = document.createElement('div');
-		return "onwheel" in div || "wheel" in div ||
-			(isIE && document.implementation.hasFeature("Events.wheel", "3.0")); // IE feature detection
-	}
-
-	var
-		INVALID_PROPS,
-		matches,
-		hasWheel = hasWheelTest(),
-		isWin = navigator.userAgent.indexOf('Windows') > -1,
-		FACTOR = isWin ? 10 : 0.1,
-		XLR8 = 0,
-		mouseWheelHandle;
-
-
-	['matches', 'matchesSelector', 'webkit', 'moz', 'ms', 'o'].some(function (name) {
-		if (name.length < 7) { // prefix
-			name += 'MatchesSelector';
-		}
-		if (Element.prototype[name]) {
-			matches = name;
-			return true;
-		}
-		return false;
-	});
-
-	function closest (element, selector, parent) {
-		while (element) {
-			if (element[matches] && element[matches](selector)) {
-				return element;
-			}
-			if (element === parent) {
-				break;
-			}
-			element = element.parentElement;
-		}
-		return null;
-	}
-
 	// main function
 
 	function on (node, eventName, filter, handler) {
@@ -70,17 +28,16 @@
 		}
 
 		// special case: keydown/keyup with a list of expected keys
-		// TODO: consider replacing with a better event function
+		// TODO: consider replacing with an explicit event function:
+		// var h = on(node, onKeyEvent('keyup', /Enter,Esc/), callback);
 		var keyEvent = /^(keyup|keydown):(.+)$/.exec(eventName);
 		if (keyEvent) {
-			return on(node,
-				onKeyEvent(keyEvent[1], new RegExp(keyEvent[2].split(',').join('|'))),
-				callback);
+			return onKeyEvent(keyEvent[1], new RegExp(keyEvent[2].split(',').join('|')))(node, callback);
 		}
 
 		// handle multiple event types, like: on(node, 'mouseup, mousedown', callback);
 		if (/,/.test(eventName)) {
-			return makeMultiHandle(eventName.split(',').map(function (name) {
+			return on.makeMultiHandle(eventName.split(',').map(function (name) {
 				return name.trim();
 			}).filter(function (name) {
 				return name;
@@ -105,7 +62,7 @@
 			callback = normalizeWheelEvent(callback);
 			if (!hasWheel) {
 				// old Firefox, old IE, Chrome
-				return makeMultiHandle([
+				return on.makeMultiHandle([
 					on(node, 'DOMMouseScroll', callback),
 					on(node, 'mousewheel', callback)
 				]);
@@ -118,30 +75,14 @@
 		}
 
 		// default case
-		node.addEventListener(eventName, callback, false);
-
-		handle = {
-			remove: function () {
-				node.removeEventListener(eventName, callback, false);
-				node = callback = null;
-				this.remove = this.pause = this.resume = function () {};
-			},
-			pause: function () {
-				node.removeEventListener(eventName, callback, false);
-			},
-			resume: function () {
-				node.addEventListener(eventName, callback, false);
-			}
-		};
-
-		return handle;
+		return on.onDomEvent(node, eventName, callback);
 	}
 
 	// registered functional events
 	on.events = {
 		// handle click and Enter
 		button: function (node, callback) {
-			return makeMultiHandle([
+			return on.makeMultiHandle([
 				on(node, 'click', callback),
 				on(node, 'keyup:Enter', callback)
 			]);
@@ -187,35 +128,89 @@
 
 	// internal event handlers
 
-	function onImageLoad (img, callback) {
+	function onDomEvent (node, eventName, callback) {
+		node.addEventListener(eventName, callback, false);
+		return {
+			remove: function () {
+				node.removeEventListener(eventName, callback, false);
+				node = callback = null;
+				this.remove = this.pause = this.resume = function () {};
+			},
+			pause: function () {
+				node.removeEventListener(eventName, callback, false);
+			},
+			resume: function () {
+				node.addEventListener(eventName, callback, false);
+			}
+		};
+	}
+
+	function onImageLoad (node, callback) {
+		var handle = on.makeMultiHandle([
+			on.onDomEvent(node, 'load', onImageLoad),
+			on(node, 'error', callback)
+		]);
+
+		return handle;
+
 		function onImageLoad (e) {
-			var h = setInterval(function () {
-				if (img.naturalWidth) {
-					e.width = img.naturalWidth;
-					e.naturalWidth = img.naturalWidth;
-					e.height = img.naturalHeight;
-					e.naturalHeight = img.naturalHeight;
+			var interval = setInterval(function () {
+				// TODO: what if an image is 0x0? is it possible?
+				if (node.naturalWidth || node.naturalHeight) {
+					e.width  = e.naturalWidth  = node.naturalWidth;
+					e.height = e.naturalHeight = node.naturalHeight;
 					callback(e);
-					clearInterval(h);
+					clearInterval(interval);
 				}
 			}, 100);
-			img.removeEventListener('load', onImageLoad);
-			img.removeEventListener('error', callback);
-		}
-
-		img.addEventListener('load', onImageLoad);
-		img.addEventListener('error', callback);
-		return {
-			pause: function () {},
-			resume: function () {},
-			remove: function () {
-				img.removeEventListener('load', onImageLoad);
-				img.removeEventListener('error', callback);
-			}
+			handle.remove();
 		}
 	}
 
+	function onKeyEvent (keyEventName, re) {
+		return function (node, callback) {
+			return on(node, keyEventName, function (e) {
+				if (re.test(e.key)) {
+					callback(e);
+				}
+			});
+		};
+	}
+
 	// internal utilities
+
+	var hasWheel = (function hasWheelTest () {
+		var
+			isIE = navigator.userAgent.indexOf('Trident') > -1,
+			div = document.createElement('div');
+		return "onwheel" in div || "wheel" in div ||
+			(isIE && document.implementation.hasFeature("Events.wheel", "3.0")); // IE feature detection
+	})();
+
+	var matches;
+	['matches', 'matchesSelector', 'webkit', 'moz', 'ms', 'o'].some(function (name) {
+		if (name.length < 7) { // prefix
+			name += 'MatchesSelector';
+		}
+		if (Element.prototype[name]) {
+			matches = name;
+			return true;
+		}
+		return false;
+	});
+
+	function closest (element, selector, parent) {
+		while (element) {
+			if (element[on.matches] && element[on.matches](selector)) {
+				return element;
+			}
+			if (element === parent) {
+				break;
+			}
+			element = element.parentElement;
+		}
+		return null;
+	}
 
 	var INVALID_PROPS = {
 		isTrusted: 1
@@ -260,6 +255,11 @@
 		}
 	}
 
+	var
+		FACTOR = navigator.userAgent.indexOf('Windows') > -1 ? 10 : 0.1,
+		XLR8 = 0,
+		mouseWheelHandle;
+
 	function normalizeWheelEvent (callback) {
 		// normalizes all browsers' events to a standard:
 		// delta, wheelY, wheelX
@@ -287,7 +287,7 @@
 
 	function closestFilter (element, selector) {
 		return function (e) {
-			return closest(e.target, selector, element);
+			return on.closest(e.target, selector, element);
 		};
 	}
 
@@ -388,6 +388,7 @@
 	};
 
 	on.makeMultiHandle = makeMultiHandle;
+	on.onDomEvent = onDomEvent; // use directly to prevent possible definition loops
 	on.closest = closest;
 	on.matches = matches;
 

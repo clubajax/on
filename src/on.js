@@ -37,7 +37,7 @@
 
 		// handle multiple event types, like: on(node, 'mouseup, mousedown', callback);
 		if (/,/.test(eventName)) {
-			return makeMultiHandle(eventName.split(',').map(function (name) {
+			return on.makeMultiHandle(eventName.split(',').map(function (name) {
 				return name.trim();
 			}).filter(function (name) {
 				return name;
@@ -62,7 +62,7 @@
 			callback = normalizeWheelEvent(callback);
 			if (!hasWheel) {
 				// old Firefox, old IE, Chrome
-				return makeMultiHandle([
+				return on.makeMultiHandle([
 					on(node, 'DOMMouseScroll', callback),
 					on(node, 'mousewheel', callback)
 				]);
@@ -75,14 +75,14 @@
 		}
 
 		// default case
-		return onDomEvent(node, eventName, callback);
+		return on.onDomEvent(node, eventName, callback);
 	}
 
 	// registered functional events
 	on.events = {
 		// handle click and Enter
 		button: function (node, callback) {
-			return makeMultiHandle([
+			return on.makeMultiHandle([
 				on(node, 'click', callback),
 				on(node, 'keyup:Enter', callback)
 			]);
@@ -146,8 +146,8 @@
 	}
 
 	function onImageLoad (node, callback) {
-		var handle = makeMultiHandle([
-			onDomEvent(node, 'load', onImageLoad),
+		var handle = on.makeMultiHandle([
+			on.onDomEvent(node, 'load', onImageLoad),
 			on(node, 'error', callback)
 		]);
 
@@ -201,7 +201,7 @@
 
 	function closest (element, selector, parent) {
 		while (element) {
-			if (element[matches] && element[matches](selector)) {
+			if (element[on.matches] && element[on.matches](selector)) {
 				return element;
 			}
 			if (element === parent) {
@@ -388,6 +388,7 @@
 	};
 
 	on.makeMultiHandle = makeMultiHandle;
+	on.onDomEvent = onDomEvent; // use directly to prevent possible definition loops
 	on.closest = closest;
 	on.matches = matches;
 
