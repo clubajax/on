@@ -15,7 +15,7 @@
 
 	function on (node, eventName, filter, handler) {
 		// normalize parameters
-		if (typeof node == 'string') {
+		if (typeof node === 'string') {
 			node = getNodeById(node);
 		}
 
@@ -23,7 +23,7 @@
 		var callback = makeCallback(node, filter, handler);
 
 		// functional event
-		if (typeof eventName == 'function') {
+		if (typeof eventName === 'function') {
 			return eventName(node, callback);
 		}
 
@@ -273,7 +273,7 @@
 
 			deltaY = deltaY <= 0 ? deltaY - XLR8 : deltaY + XLR8;
 
-			e.delta = deltaY;
+			e.delta  = deltaY;
 			e.wheelY = deltaY;
 			e.wheelX = deltaX;
 
@@ -336,7 +336,7 @@
 
 	function makeCallback (node, filter, handler) {
 		if (filter && handler) {
-			if (typeof filter == 'string') {
+			if (typeof filter === 'string') {
 				filter = closestFilter(node, filter);
 			}
 			return function (e) {
@@ -369,14 +369,14 @@
 	};
 
 	on.emit = function (node, eventName, value) {
-		node = typeof node == 'string' ? getNodeById(node) : node;
+		node = typeof node === 'string' ? getNodeById(node) : node;
 		var event = node.ownerDocument.createEvent('HTMLEvents');
 		event.initEvent(eventName, true, true); // event type, bubbling, cancelable
 		return node.dispatchEvent(mix(event, value));
 	};
 
 	on.fire = function (node, eventName, eventDetail, bubbles) {
-		node = typeof node == 'string' ? getNodeById(node) : node;
+		node = typeof node === 'string' ? getNodeById(node) : node;
 		var event = node.ownerDocument.createEvent('CustomEvent');
 		event.initCustomEvent(eventName, !!bubbles, true, eventDetail); // event type, bubbling, cancelable, value
 		return node.dispatchEvent(event);
