@@ -155,7 +155,6 @@
 
 		function onImageLoad (e) {
 			var interval = setInterval(function () {
-				// TODO: what if an image is 0x0? is it possible?
 				if (node.naturalWidth || node.naturalHeight) {
 					e.width  = e.naturalWidth  = node.naturalWidth;
 					e.height = e.naturalHeight = node.naturalHeight;
@@ -382,7 +381,7 @@
 		return node.dispatchEvent(event);
 	};
 
-	// TODO: undocumented and unused? why is an one-liner available as a function?
+	// TODO: DEPRECATED
 	on.isAlphaNumeric = function (str) {
 		return /^[0-9a-z]$/i.test(str);
 	};

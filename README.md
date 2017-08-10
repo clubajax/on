@@ -17,9 +17,6 @@ It is recommended that you set the config.path of RequireJS to make `on` accessi
 path. If using as a global or with Browserify, it is suggested that you use an *NPM run script* to
 copy the `on` script to a location more convenient for your project.
 
-`on` can work with the very well-done [keyboardevent-key-polyfill](https://github.com/cvan/keyboardevent-key-polyfill),
-which provides [KeyboardEvent.key](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key) property in the event.
-
 ## Description
 
 `on` is a library for handling DOM node events in a simple way. It has been under development and used in
@@ -27,7 +24,7 @@ production for years. The code is very well established, tested, and used in ent
 
 The primary feature is it returns a handle, from which you can pause, resume, and remove the event handler.
 Handles are much easier to manipulate than using `removeEventListener` or jQuery's `off`, which
-sometimes necessitates recreating sometimes complex or recursive function signatures.
+sometimes necessitates recreating sometimes complex, bound, or recursive function signatures.
 
 `on()` makes handling events easy, and supports directly several important techniques, like automatic binding
 of the same event handler to several events, event delegation, event filtering, and even creating synthetic
@@ -162,7 +159,7 @@ var handle = on(node, 'button', handler);
 
 Named synthetic events can be used in multiple event types described above.
 
-The library comes with two synthetic events prepulated: `"button"`, and `"clickoff"`.
+The library comes with two synthetic events pre-populated: `"button"`, and `"clickoff"`.
 
 ### `clickoff`
 
@@ -229,7 +226,7 @@ on.emit(node, 'click'); // fires only once
 on.emit(node, 'click'); //
 ```
 
-It still returns a handle though.
+It still returns a handle.
 
 `on.closest` is a polyfilled version of [the spec](https://developer.mozilla.org/en-US/docs/Web/API/Element/closest),
  which finds an ascendant element which matches a selector:
