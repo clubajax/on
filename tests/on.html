@@ -45,156 +45,147 @@
 			padding: 3px;
 		}
 	</style>
-    <script src="../src/on.js"></script>
-
+  <script src="../src/on.js"></script>
 </head>
 <body>
-	<h1>on v2.0 test</h1>
+	<h1>on v2.1 test</h1>
 	<p>Results are in the console.</p>
-	
+
 	<p>Test Key Events</p>
 	<input id='inp' />
 
 	<p>Test Multi Key Events</p>
 	<input id='minp' />
 
-    <p>Test simple connections</p>
-    <button id=b1>clicker</button>
-    <button id=b2>pause clicker</button>
-    <button id=b3>resume clicker</button>
-    <button id=b4>cancel clicker</button>
-
-    <p>Test context</p>
-    <button id=cb1>clicker</button>
-    <button id=cm1>multi</button>
+  <p>Test simple connections</p>
+  <button id=b1>clicker</button>
+  <button id=b2>pause clicker</button>
+  <button id=b3>resume clicker</button>
+  <button id=b4>cancel clicker</button>
 
 	<p>Test Button Event</p>
 	<button id=b5>Click or Enter</button>
 
-    <p>Test css selectors</p>
-    <div id=css>
-        <span class='tab'><a href='#' >Tab 1</a></span>
-        <span class='tab'><a href='#' >Tab 2</a></span>
-        <span class='tab'><a href='#' >Tab 3</a></span>
-    </div>
-	
+  <p>Test css selectors</p>
+  <div id=css>
+    <span class='tab'><a href='#' >Tab 1</a></span>
+    <span class='tab'><a href='#' >Tab 2</a></span>
+    <span class='tab'><a href='#' >Tab 3</a></span>
+  </div>
+
 	<div id='mousewheeltest'>Test mousewheel</div>
-	
+
 	<div id='modal'>
 		Modal. Click in me, click out of me, mouse in and out of me.
 	</div>
 
 	<script>
-			console.log('on loaded');
-			var
-				on = window.on,
-				h1, h2, o, clickoff,
-				tabs = document.querySelectorAll('.tab'),
-				wheelNode = document.getElementById('mousewheeltest'),
-				modal = document.getElementById('modal');
+		console.log('on loaded');
+		var
+			on = window.on,
+			h1, h2, o, clickoff,
+			tabs = document.querySelectorAll('.tab'),
+			wheelNode = document.getElementById('mousewheeltest'),
+			modal = document.getElementById('modal');
 
-			// test mouse wheel normalization
-			on(wheelNode, 'wheel', function(e){
-				wheelNode.innerHTML = 'delta: ' + e.delta.toFixed(2)+ '<br>wheelY: ' + e.wheelY.toFixed(2)+ '<br>wheelX: ' + e.wheelX.toFixed(2);
-			});
+		// test mouse wheel normalization
+		on(wheelNode, 'wheel', function(e){
+			wheelNode.innerHTML = 'delta: ' + e.delta.toFixed(2)+ '<br>wheelY: ' + e.wheelY.toFixed(2)+ '<br>wheelX: ' + e.wheelX.toFixed(2);
+		});
 
-			// test modal clickoff special function
-			clickoff = on(modal, 'clickoff', function(){
-				modal.innerHTML = ('modal clickoff');	
-			});
-			clickoff.resume();
-
-
-			// test mouseemter/leave
-			// should be standard in all browsers
-			on('modal', 'mouseenter', function(){
-				modal.innerHTML = ('modal enter');	
-			});
-			on('modal', 'mouseleave', function(){
-				modal.innerHTML = ('modal leave');	
-			});
-			
-			// test CSS filters
-			on('css', 'click', '.tab', function(e, filteredTarget){
-				console.log('clicked tab', e.filteredTarget);
-			});
+		// test modal clickoff special function
+		clickoff = on(modal, 'clickoff', function(){
+			modal.innerHTML = ('modal clickoff');
+		});
+		clickoff.resume();
 
 
-			// test pause/remove handles
-			h1 = on('b1', 'click', function(){
-				console.log('[clicker]');
-			});
-			on('b2', 'click', function(){
-				h1.pause();
-				console.log('pause!');
-			});
-			on('b3', 'click', function(){
-				h1.resume();
-				console.log('resume!');
-			});
-			on('b4', 'click', function(){
-				h1.remove();
-				console.log('remove!');
-			});
+		// test mouseenter/leave
+		// should be standard in all browsers
+		on('modal', 'mouseenter', function(){
+			modal.innerHTML = ('modal enter');
+		});
+		on('modal', 'mouseleave', function(){
+			modal.innerHTML = ('modal leave');
+		});
 
-			// test button
-			on('b5', 'button', function () {
-				console.log('Exec Button');
-			});
+		// test CSS filters
+		on('css', 'click', '.tab', function(e, filteredTarget){
+			console.log('clicked tab', e.filteredTarget);
+		});
 
-			// test key handling
-			// expects the use of polyfill
-			on('inp', 'keydown', function(e){
-				console.log('keydown', e.key, e.keyCode, e);
-			});
-			on('inp', 'keyup', function(e){
-				//console.log('keyup', e.alphanumeric, e.key);
-			});
-			on('inp', 'keypress', function(e){
-				//console.log('keypress', e.alphanumeric, e.key);
-			});
 
-			// test multi key handling
-			on('minp', 'keydown:a,b,c, ,ArrowDown,ArrowUp,ArrowLeft,ArrowRight,Enter,Escape', function(e){
-				console.log('keydown', e.key);
+		// test pause/remove handles
+		h1 = on('b1', 'click', function(){
+			console.log('[clicker]');
+		});
+		on('b2', 'click', function(){
+			h1.pause();
+			console.log('pause!');
+		});
+		on('b3', 'click', function(){
+			h1.resume();
+			console.log('resume!');
+		});
+		on('b4', 'click', function(){
+			h1.remove();
+			console.log('remove!');
+		});
+
+		// test button
+		on('b5', 'button', function () {
+			console.log('Exec Button');
+		});
+
+		// test key handling
+		// expects the use of polyfill
+		on('inp', 'keydown', function(e){
+			console.log('keydown', e.key, e.keyCode, e);
+		});
+		on('inp', 'keyup', function(e){
+			//console.log('keyup', e.alphanumeric, e.key);
+		});
+		on('inp', 'keypress', function(e){
+			//console.log('keypress', e.alphanumeric, e.key);
+		});
+
+		// test multi key handling
+		on('minp', 'keydown:a,b,c, ,ArrowDown,ArrowUp,ArrowLeft,ArrowRight,Enter,Escape', function(e){
+			console.log('keydown', e.key);
+		});
+
+		function delay(fn){
+			setTimeout(fn, 300);
+		}
+
+		function testKeys(){
+			delay(function () {
+				on.emit('inp', 'keydown', {keyCode: 65, key: 'A'});
 			});
-
-			function delay(fn){
-				setTimeout(fn, 300);
-			}
-
-			function testKeys(){
+		}
+		function test(){
+			delay(function () {
+				on.emit('modal', 'mouseenter');
 				delay(function () {
-					on.emit('inp', 'keydown', {keyCode: 65, key: 'A'});
+					on.emit('modal', 'mouseleave');
 				});
-			}
-			function test(){
-				delay(function () {
-					on.emit('modal', 'mouseenter');
-					delay(function () {
-						on.emit('modal', 'mouseleave');
-					});
-				});
-				console.log('should see [clicker] twice:');
-				on.emit('b1', 'click');
-				on.emit('b2', 'click');
-				on.emit('b1', 'click');
-				on.emit('b1', 'click');
-				on.emit('b3', 'click');
-				on.emit('b1', 'click');
-				on.emit('b4', 'click');
-				on.emit('b1', 'click');
-				on.emit('b1', 'click');
+			});
+			console.log('should see [clicker] twice:');
+			on.emit('b1', 'click');
+			on.emit('b2', 'click');
+			on.emit('b1', 'click');
+			on.emit('b1', 'click');
+			on.emit('b3', 'click');
+			on.emit('b1', 'click');
+			on.emit('b4', 'click');
+			on.emit('b1', 'click');
+			on.emit('b1', 'click');
 
-				on.emit(tabs[0], 'click');
-				on.emit(tabs[1], 'click');
-				on.emit(tabs[2], 'click');
-
-
-
-			}
-			test();
-			testKeys();
-
-</script>
+			on.emit(tabs[0], 'click');
+			on.emit(tabs[1], 'click');
+			on.emit(tabs[2], 'click');
+		}
+		test();
+		testKeys();
+	</script>
 </html>

@@ -1,17 +1,17 @@
 {
-	"name": "on",
-  "version": "2.0.1",
-  "author": "anm9tr@gmail.com",
-	"main":"dist/on.js",
-  "description": "A library for making DOM Node event handling simple",
-	"license": "MIT",
-    "readmeFilename": "README.md",
-	"repository": {
-        "type": "git",
-        "url": "git://github.com/clubajax/on.git"
-    },
-	"devDependencies": {
-		"grunt": "^1.0.1",
-    "grunt-contrib-uglify": "^2.3.0"
-	}
+ "name": "on",
+ "version": "2.1.0",
+ "author": "anm9tr@gmail.com",
+ "main": "dist/on.js",
+ "description": "A library for making DOM Node event handling simple",
+ "license": "MIT",
+ "readmeFilename": "README.md",
+ "repository": {
+  "type": "git",
+  "url": "git://github.com/clubajax/on.git"
+ },
+ "devDependencies": {
+  "grunt": "^1.0.1",
+  "grunt-contrib-uglify": "^2.3.0"
+ }
 }
