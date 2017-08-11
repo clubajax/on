@@ -1,6 +1,6 @@
 {
  "name": "on",
- "version": "2.1.1",
+ "version": "2.1.2",
  "author": "anm9tr@gmail.com",
  "main": "dist/on.js",
  "description": "A library for making DOM Node event handling simple",

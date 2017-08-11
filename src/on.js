@@ -156,10 +156,10 @@
 		function onImageLoad (e) {
 			var interval = setInterval(function () {
 				if (node.naturalWidth || node.naturalHeight) {
+					clearInterval(interval);
 					e.width  = e.naturalWidth  = node.naturalWidth;
 					e.height = e.naturalHeight = node.naturalHeight;
 					callback(e);
-					clearInterval(interval);
 				}
 			}, 100);
 			handle.remove();
