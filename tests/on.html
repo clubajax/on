@@ -164,6 +164,11 @@
 			});
 		}
 		function test(){
+			// test document events
+			on(document, 'doc-test', function () {
+				console.log('document.doc-test fired');
+			});
+			on.fire(document, 'doc-test');
 			delay(function () {
 				on.emit('modal', 'mouseenter');
 				delay(function () {
