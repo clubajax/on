@@ -4,11 +4,15 @@ A library for making it easy to manage DOM Node events.
 
 ## Getting Started
 
-To install using bower:
+To install:
 
-	bower install clubajax/on --save
+	npm install @clubajax/on --save
 
-You may also use `npm` if you prefer. You can also clone the repository with your generic clone commands as a standalone
+Or `bower`:
+ 
+    bower install clubajax/on --save
+ 
+You can clone the repository with your generic clone commands as a standalone
 repository or submodule.
 
 	git clone git://github.com/clubajax/on.git
