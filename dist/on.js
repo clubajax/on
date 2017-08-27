@@ -369,14 +369,14 @@
 
 	on.emit = function (node, eventName, value) {
 		node = typeof node === 'string' ? getNodeById(node) : node;
-		var event = node.ownerDocument.createEvent('HTMLEvents');
+		var event = (node === document ? document : node.ownerDocument).createEvent('HTMLEvents');
 		event.initEvent(eventName, true, true); // event type, bubbling, cancelable
 		return node.dispatchEvent(mix(event, value));
 	};
 
 	on.fire = function (node, eventName, eventDetail, bubbles) {
 		node = typeof node === 'string' ? getNodeById(node) : node;
-		var event = node.ownerDocument.createEvent('CustomEvent');
+		var event = (node === document ? document : node.ownerDocument).createEvent('CustomEvent');
 		event.initCustomEvent(eventName, !!bubbles, true, eventDetail); // event type, bubbling, cancelable, value
 		return node.dispatchEvent(event);
 	};
