@@ -349,6 +349,10 @@
 		return filter || handler;
 	}
 
+	function getDoc (node) {
+		return node === document || node === window ? document : node.ownerDocument;
+	}
+
 	// public functions
 
 	on.once = function (node, eventName, filter, callback) {
@@ -369,14 +373,14 @@
 
 	on.emit = function (node, eventName, value) {
 		node = typeof node === 'string' ? getNodeById(node) : node;
-		var event = (node === document ? document : node.ownerDocument).createEvent('HTMLEvents');
+		var event = getDoc(node).createEvent('HTMLEvents');
 		event.initEvent(eventName, true, true); // event type, bubbling, cancelable
 		return node.dispatchEvent(mix(event, value));
 	};
 
 	on.fire = function (node, eventName, eventDetail, bubbles) {
 		node = typeof node === 'string' ? getNodeById(node) : node;
-		var event = (node === document ? document : node.ownerDocument).createEvent('CustomEvent');
+		var event = getDoc(node).createEvent('CustomEvent');
 		event.initCustomEvent(eventName, !!bubbles, true, eventDetail); // event type, bubbling, cancelable, value
 		return node.dispatchEvent(event);
 	};
