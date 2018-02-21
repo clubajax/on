@@ -167,8 +167,8 @@
 	}
 
 	function onKeyEvent (keyEventName, re) {
-		return function (node, callback) {
-			return on(node, keyEventName, function (e) {
+		return function onKeyHandler (node, callback) {
+			return on(node, keyEventName, function onKey (e) {
 				if (re.test(e.key)) {
 					callback(e);
 				}
@@ -243,7 +243,7 @@
 
 	function normalizeKeyEvent (callback) {
 		// IE uses old spec
-		return function (e) {
+		return function normalizeKeys (e) {
 			if (ieKeys[e.key]) {
 				var fakeEvent = mix({}, e);
 				fakeEvent.key = ieKeys[e.key];
@@ -264,7 +264,7 @@
 		// delta, wheelY, wheelX
 		// also adds acceleration and deceleration to make
 		// Mac and Windows behave similarly
-		return function (e) {
+		return function normalizeWheel (e) {
 			XLR8 += FACTOR;
 			var
 				deltaY = Math.max(-1, Math.min(1, (e.wheelDeltaY || e.deltaY))),
@@ -358,12 +358,12 @@
 	on.once = function (node, eventName, filter, callback) {
 		var h;
 		if (filter && callback) {
-			h = on(node, eventName, filter, function () {
+			h = on(node, eventName, filter, function once () {
 				callback.apply(window, arguments);
 				h.remove();
 			});
 		} else {
-			h = on(node, eventName, function () {
+			h = on(node, eventName, function once () {
 				filter.apply(window, arguments);
 				h.remove();
 			});
