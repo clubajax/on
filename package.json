@@ -1,6 +1,6 @@
 {
   "name": "@clubajax/on",
-  "version": "2.1.8",
+  "version": "2.2.0",
   "author": "anm9tr@gmail.com",
   "main": "src/on.js",
   "description": "A library for making DOM Node event handling simple",

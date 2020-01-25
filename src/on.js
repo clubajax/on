@@ -92,16 +92,25 @@
 		clickoff: function (node, callback) {
 			// important note!
 			// starts paused
-			//
-			var bHandle = on(node.ownerDocument.documentElement, 'click', function (e) {
-				var target = e.target;
-				if (target.nodeType !== 1) {
-					target = target.parentNode;
-				}
-				if (target && !node.contains(target)) {
-					callback(e);
-				}
-			});
+            //
+            var nodeDoc = node.ownerDocument.documentElement;
+            var bHandle = makeMultiHandle([
+                on(nodeDoc, 'click', function (e) {
+                    var target = e.target;
+                    if (target.nodeType !== 1) {
+                        target = target.parentNode;
+                    }
+                    if (target && !node.contains(target)) {
+                        callback(e);
+                    }
+                }),
+                on(nodeDoc, 'keyup', function (e) {
+                    if (e.key === 'Escape') {
+                        callback(e);
+                    }
+                })
+            ]);
+                
 
 			var handle = {
 				state: 'resumed',
