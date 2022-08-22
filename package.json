@@ -1,6 +1,6 @@
 {
   "name": "@clubajax/on",
-  "version": "2.2.2",
+  "version": "2.2.6",
   "author": "anm9tr@gmail.com",
   "main": "on.js",
   "description": "A library for making DOM event handling simple",
@@ -10,7 +10,7 @@
     "url": "git://github.com/clubajax/on.git"
   },
   "devDependencies": {
-    "@clubajax/node-file-managment": "^0.1.5"
+    "@clubajax/node-file-managment": "^0.1.7"
   },
   "bugs": {
     "url": "https://github.com/clubajax/on/issues"
@@ -22,7 +22,8 @@
   "scripts": {
     "start": "http-server",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node ./scripts/deploy.js"
+    "build": "node ./scripts/deploy.js",
+    "jk": "node ./scripts/deploy.js --jk"
   },
   "keywords": [
     "on",

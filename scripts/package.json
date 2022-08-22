@@ -1,6 +1,6 @@
 {
   "name": "@clubajax/on",
-  "version": "2.2.2",
+  "version": "2.2.6",
   "author": "anm9tr@gmail.com",
   "main": "on.js",
   "description": "A library for making DOM event handling simple",
@@ -19,5 +19,8 @@
     "addEventListener",
     "event",
     "handler"
-  ]
+  ],
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
 }

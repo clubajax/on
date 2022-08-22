@@ -6,16 +6,16 @@ A library for making it easy to manage DOM Node events.
 
 To install:
 
-	npm install @clubajax/on --save
+	npm install @janiking/on --save
 
 Or `bower`:
  
-    bower install clubajax/on --save
+    bower install janiking/on --save
  
 You can clone the repository with your generic clone commands as a standalone
 repository or submodule.
 
-	git clone git://github.com/clubajax/on.git
+	git clone git://github.com/janiking/on.git
 
 It is recommended that you set the config.path of RequireJS to make `on` accessible as an absolute
 path. If using as a global or with Browserify, it is suggested that you use an *NPM run script* to
